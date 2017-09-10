@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 /**
  * Created by okosa on 9/9/2017.
  */
-//@Disabled
+@Disabled
 @Autonomous(name = "RelicRecoveryAutonomous")
 public class RelicRecoveryAutonomous extends LinearOpMode {
     //Local Variables
