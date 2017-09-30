@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.*;
 @Disabled
 @TeleOp(name = "RelicRecoveryAutonomous")
 public class RelicRecoveryTeleOp extends OpMode {
+    Hardware robot;
     @Override
     public void init() {
 
@@ -17,4 +18,12 @@ public class RelicRecoveryTeleOp extends OpMode {
     public void loop() {
 
     }
+
+    public void pickUp(){
+    }
+
+    public void rotate(){
+
+    }
+
 }

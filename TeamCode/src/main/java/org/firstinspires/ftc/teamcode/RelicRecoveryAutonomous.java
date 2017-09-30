@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Color;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -12,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
  */
 //@Disabled
 @Autonomous(name = "RelicRecoveryAutonomous")
-public class RelicRecoveryAutonomous extends LinearOpMode {
+public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     //Local Variables
     Hardware robot;
     RelicRecoveryVuMark cryptoboxKey;  //UNKNOWN, LEFT, CENTER, RIGHT
@@ -26,17 +27,13 @@ public class RelicRecoveryAutonomous extends LinearOpMode {
         robot.setDriveTrainRunMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        telemetry.addData("Status", "Waiting For Start");
-        telemetry.update();
-        waitForStart();
-
         telemetry.addData("Status", "Decoding Pictograph");
         telemetry.update();
         decodePictograph();
 
-        telemetry.addData("Status", "Drive to Jewel Set");
+        telemetry.addData("Status", "Waiting For Start");
         telemetry.update();
-        driveToJewelSet();
+        waitForStart();
 
         telemetry.addData("Status", "Remove Jewel");
         telemetry.update();
@@ -57,7 +54,7 @@ public class RelicRecoveryAutonomous extends LinearOpMode {
 
 
     private void decodePictograph() {
-        double scanDuration = 1;    //second(s)
+        double scanDuration = 3;    //second(s)
         double startTime = getRuntime();
         do {
             cryptoboxKey = robot.getPictograph();
@@ -68,10 +65,20 @@ public class RelicRecoveryAutonomous extends LinearOpMode {
         while (cryptoboxKey == RelicRecoveryVuMark.UNKNOWN && getRuntime() < startTime + scanDuration && opModeIsActive());
     }
 
-    private void driveToJewelSet() {
-    }
 
     private void removeJewel() {
+        robot.jewelServo.setPosition(robot.JEWEL_SERVO_DOWN);
+        sleep(1500);
+        robot.getColorDetected();
+        if (robot.getColorDetected() == getDesiredColor()){
+            //turn right!
+        }
+        else if (robot.getColorDetected() != Hardware.ColorDetected.NONE){
+            // turn left!
+        }
+        else {
+            // do nothing OR random!!!!! rawr xD lolzor;
+        }
     }
 
     private void driveToCryptobox() {
@@ -82,4 +89,7 @@ public class RelicRecoveryAutonomous extends LinearOpMode {
 
     private void placeGlyphInCryptoBox() {
     }
+
+    abstract Hardware.ColorDetected getDesiredColor();
+
 }

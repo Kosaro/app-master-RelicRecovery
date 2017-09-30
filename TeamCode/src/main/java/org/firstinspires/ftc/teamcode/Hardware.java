@@ -1,7 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -18,19 +25,51 @@ public class Hardware {
     //Configuration Constants
     private static final String LEFT_MOTOR = "lm";
     private static final String RIGHT_MOTOR = "rm";
+    private static final String JEWEL_SERVO = "js";
+    private static final String COLOR_SENSOR = "cs";
+
+    public static final double JEWEL_SERVO_DOWN = 0;
+    public static final double JEWEL_SERVO_UP = 1;
 
     //Hardware Devices
     DcMotor leftMotor;
     DcMotor rightMotor;
+    Servo jewelServo;
+
+    private byte[] colorCache;
+    private I2cDevice colorSensor;
+    private I2cDeviceSynch colorReader;
 
     //Local Variables
     private HardwareMap hardwareMap;
     private VuforiaLocalizer vuforia;
     private VuforiaTrackable relicTemplate;
 
+    enum ColorDetected {
+        BLUE("Blue"),
+        RED("Red"),
+        NONE("None");
+
+        String description;
+
+        public String toString() {
+            return description;
+        }
+
+        ColorDetected(String description) {
+            this.description = description;
+        }
+    }
+
     private void initialize() {
         leftMotor = getHardwareDevice(DcMotor.class, LEFT_MOTOR);
         rightMotor = getHardwareDevice(DcMotor.class, RIGHT_MOTOR);
+        jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
+        colorSensor = hardwareMap.i2cDevice.get(COLOR_SENSOR);
+        colorReader = new I2cDeviceSynchImpl(colorSensor, I2cAddr.create8bit(0x3c), false);
+
+        colorReader.engage();
+        colorReader.write8(3, 0);
     }
 
 
@@ -68,5 +107,16 @@ public class Hardware {
 
     public RelicRecoveryVuMark getPictograph() {
         return RelicRecoveryVuMark.from(relicTemplate);
+    }
+
+    public ColorDetected getColorDetected(){
+        colorCache = colorReader.read(0x04, 1);
+         if (colorCache[0]>1 && colorCache[0]<4){
+             return ColorDetected.BLUE;
+         }
+         if (colorCache[0]>9 && colorCache[0]<12){
+             return ColorDetected.RED;
+         }
+         return ColorDetected.NONE;
     }
 }
