@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,7 +13,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
@@ -27,6 +33,7 @@ public class Hardware {
     private static final String RIGHT_MOTOR = "rm";
     private static final String JEWEL_SERVO = "js";
     private static final String COLOR_SENSOR = "cs";
+    final static String IMU = "imu";
 
     public static final double JEWEL_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
@@ -35,6 +42,7 @@ public class Hardware {
     DcMotor leftMotor;
     DcMotor rightMotor;
     Servo jewelServo;
+    BNO055IMU imu;
 
     private byte[] colorCache;
     private I2cDevice colorSensor;
@@ -65,11 +73,22 @@ public class Hardware {
         leftMotor = getHardwareDevice(DcMotor.class, LEFT_MOTOR);
         rightMotor = getHardwareDevice(DcMotor.class, RIGHT_MOTOR);
         jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
-        colorSensor = hardwareMap.i2cDevice.get(COLOR_SENSOR);
+        colorSensor = getHardwareDevice(I2cDevice.class, COLOR_SENSOR);
         colorReader = new I2cDeviceSynchImpl(colorSensor, I2cAddr.create8bit(0x3c), false);
+        imu = getHardwareDevice(BNO055IMU.class, IMU);
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         colorReader.engage();
         colorReader.write8(3, 0);
+    }
+
+    //Initialize IMU
+    private void initializeImuParameters() {
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+
+        imu.initialize(parameters);
     }
 
 
@@ -78,9 +97,16 @@ public class Hardware {
         rightMotor.setMode(runMode);
     }
 
+    //Find angle from gyro
+    double getAngle() {
+        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES)
+                .toAngleUnit(AngleUnit.DEGREES).firstAngle;
+    }
+
     Hardware(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
         initialize();
+        initializeImuParameters();
     }
 
     private <T> T getHardwareDevice(Class<? extends T> classOrInterface, String deviceName) {
