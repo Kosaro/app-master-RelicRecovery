@@ -15,12 +15,23 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 //@Disabled
 @Autonomous(name = "RelicRecoveryAutonomous")
 public abstract class RelicRecoveryAutonomous extends LinearOpMode {
+    //constants
+    private final static int DISTANCE_FAR = 3000;
+    private final static int DISTANCE_CENTER = 2500;
+    private final static int DISTANCE_CLOSE = 2000;
+
     //Local Variables
     Hardware robot;
     RelicRecoveryVuMark cryptoboxKey;  //UNKNOWN, LEFT, CENTER, RIGHT
 
+    int directionMultiplier;
     @Override
     public void runOpMode() throws InterruptedException {
+
+        if (getDesiredColor() == Hardware.ColorDetected.RED)
+            directionMultiplier = 1;
+        else
+            directionMultiplier = -1;
         telemetry.addData("Status", "Initializing");
         telemetry.update();
         robot = new Hardware(hardwareMap);
@@ -43,6 +54,10 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         telemetry.addData("Status", "Drive to Cryptobox");
         telemetry.update();
         driveToCryptobox();
+
+        telemetry.addData("Status", "Turn to Cryptobox");
+        telemetry.update();
+        turnToCryptobox();
 
         telemetry.addData("Status", "Line Up With CryptoBox Key");
         telemetry.update();
@@ -98,19 +113,37 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         }
 
         int finalPosition = 0;
-        if (cryptoboxKey == RelicRecoveryVuMark.RIGHT)
-            finalPosition = 1;
-        else if (cryptoboxKey == RelicRecoveryVuMark.LEFT)
-            finalPosition = 2;
-        else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
-            finalPosition = 3;
-        else if (cryptoboxKey == RelicRecoveryVuMark.UNKNOWN)
-            finalPosition = 4;
-        robot.drive(1,0,0);
-        while ((robot.leftFrontMotor.getCurrentPosition() < finalPosition)&&(opModeIsActive())){
+        if (getDesiredColor() == Hardware.ColorDetected.RED) {
+            if (cryptoboxKey == RelicRecoveryVuMark.RIGHT)
+                finalPosition = DISTANCE_CLOSE;
+            else if (cryptoboxKey == RelicRecoveryVuMark.LEFT)
+                finalPosition = DISTANCE_FAR;
+            else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
+                finalPosition = DISTANCE_CENTER;
+            else if (cryptoboxKey == RelicRecoveryVuMark.UNKNOWN)
+                finalPosition = DISTANCE_CLOSE;
+        }else {
+            if (cryptoboxKey == RelicRecoveryVuMark.RIGHT)
+                finalPosition = DISTANCE_FAR;
+            else if (cryptoboxKey == RelicRecoveryVuMark.LEFT)
+                finalPosition = DISTANCE_CLOSE;
+            else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
+                finalPosition = DISTANCE_CENTER;
+            else if (cryptoboxKey == RelicRecoveryVuMark.UNKNOWN)
+                finalPosition = DISTANCE_CLOSE;
+        }
+        robot.drive(1 * directionMultiplier,0,0);
+        while (Math.abs(robot.leftFrontMotor.getCurrentPosition()) < finalPosition&&opModeIsActive()){
             idle();
         }
         robot.stop();
+    }
+
+    private void turnToCryptobox(){
+        while ((robot.getAngle() > 92 * directionMultiplier && robot.getAngle() < 88 * directionMultiplier) && opModeIsActive()){
+            robot.drive(0, 0, robot.turn(90 * directionMultiplier));
+            idle();
+        }
     }
 
     private void lineUpWithCryptoboxKey() {
