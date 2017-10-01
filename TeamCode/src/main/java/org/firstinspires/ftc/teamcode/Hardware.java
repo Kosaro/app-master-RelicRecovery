@@ -253,6 +253,10 @@ public class Hardware {
         return .00005;
     }
 
+    public void stop(){
+        drive(0,0,0);
+    }
+
     //Find angle from gyro
     double getAngle() {
         return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES)

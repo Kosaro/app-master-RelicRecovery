@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Color;
 
+import com.qualcomm.hardware.lynx.LynxUsbUtil;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -95,6 +96,21 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             robot.drive(0, 0, robot.turn(0));
             idle();
         }
+
+        int finalPosition = 0;
+        if (cryptoboxKey == RelicRecoveryVuMark.RIGHT)
+            finalPosition = 1;
+        else if (cryptoboxKey == RelicRecoveryVuMark.LEFT)
+            finalPosition = 2;
+        else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
+            finalPosition = 3;
+        else if (cryptoboxKey == RelicRecoveryVuMark.UNKNOWN)
+            finalPosition = 4;
+        robot.drive(1,0,0);
+        while ((robot.leftFrontMotor.getCurrentPosition() < finalPosition)&&(opModeIsActive())){
+            idle();
+        }
+        robot.stop();
     }
 
     private void lineUpWithCryptoboxKey() {
