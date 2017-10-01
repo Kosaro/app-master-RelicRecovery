@@ -385,7 +385,7 @@ public class Hardware {
     public void loadActiveCipherToFile() throws IOException, ClassNotFoundException {
         FileInputStream fis = hardwareMap.appContext.openFileInput(ACTIVE_CIPHER_FILE_NAME);
         ObjectInputStream is = new ObjectInputStream(fis);
-        Glyph[][] simpleClass = (Glyph[][]) is.readObject();
+        activeCipher = (Glyph[][]) is.readObject();
         is.close();
         fis.close();
     }
