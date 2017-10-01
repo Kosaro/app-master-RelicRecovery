@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -23,6 +24,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import static com.sun.tools.javac.main.Option.G;
+
 /**
  * Created by okosa on 9/9/2017.
  */
@@ -33,16 +36,20 @@ public class Hardware {
     private static final String RIGHT_MOTOR = "rm";
     private static final String JEWEL_SERVO = "js";
     private static final String COLOR_SENSOR = "cs";
+    private static final String LIGHT_SENSOR = "ls";
     final static String IMU = "imu";
 
     public static final double JEWEL_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
+    private static final double GREY_VALUE = 4;
+    private static final double BROWN_VALUE = 2;
 
     //Hardware Devices
     DcMotor leftMotor;
     DcMotor rightMotor;
     Servo jewelServo;
     BNO055IMU imu;
+    OpticalDistanceSensor lightSensor;
 
     private byte[] colorCache;
     private I2cDevice colorSensor;
@@ -65,6 +72,22 @@ public class Hardware {
         }
 
         ColorDetected(String description) {
+            this.description = description;
+        }
+    }
+
+    enum Glyph {
+        GREY("Grey"),
+        BROWN("Brown"),
+        NONE("None");
+
+        String description;
+
+        public String toString() {
+            return description;
+        }
+
+        Glyph(String description) {
             this.description = description;
         }
     }
@@ -126,6 +149,7 @@ public class Hardware {
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
         VuforiaTrackables relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
         relicTemplate = relicTrackables.get(0);
+
         relicTemplate.setName("relicVuMarkTemplate");
 
         relicTrackables.activate();
@@ -135,14 +159,72 @@ public class Hardware {
         return RelicRecoveryVuMark.from(relicTemplate);
     }
 
-    public ColorDetected getColorDetected(){
+    public ColorDetected getColorDetected() {
         colorCache = colorReader.read(0x04, 1);
-         if (colorCache[0]>1 && colorCache[0]<4){
-             return ColorDetected.BLUE;
-         }
-         if (colorCache[0]>9 && colorCache[0]<12){
-             return ColorDetected.RED;
-         }
-         return ColorDetected.NONE;
+        if (colorCache[0] > 1 && colorCache[0] < 4) {
+            return ColorDetected.BLUE;
+        }
+        if (colorCache[0] > 9 && colorCache[0] < 12) {
+            return ColorDetected.RED;
+        }
+        return ColorDetected.NONE;
     }
+
+    public Glyph getGlyphDetected() {
+        double lightDetected = lightSensor.getLightDetected();
+        if (lightDetected < GREY_VALUE && lightDetected > GREY_VALUE - 0.2) {
+            return Glyph.GREY;
+        }
+        if (lightDetected < BROWN_VALUE && lightDetected > BROWN_VALUE - 0.2) {
+            return Glyph.BROWN;
+        }
+        return Glyph.NONE;
+    }
+
+    Glyph cipherPattern[][][] =
+            {
+                    { //Frog
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN}
+                    },
+                    { //Frog Inverse
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY}
+                    },
+                    { //Bird
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY}
+                    },
+                    { //Bird Inverse
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                    },
+                    { //Snake
+                            {Glyph.BROWN, Glyph.GREY, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.GREY, Glyph.BROWN},
+                    },
+                    { //Snake Inverse
+                            {Glyph.GREY, Glyph.BROWN, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.BROWN, Glyph.GREY},
+                    }
+            };
+    Glyph activeCipher [][]=
+            {
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE}
+            };
 }
