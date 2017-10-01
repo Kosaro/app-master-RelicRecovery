@@ -9,6 +9,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 /**
  * Created by okosa on 9/9/2017.
  */
@@ -151,6 +155,8 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
     private void placeGlyphInCryptoBox() {
     }
+
+
 
     abstract Hardware.ColorDetected getDesiredColor();
 
