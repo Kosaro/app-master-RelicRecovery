@@ -4,12 +4,12 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -24,35 +24,32 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import static com.sun.tools.javac.main.Option.G;
+
 /**
  * Created by okosa on 9/9/2017.
  */
 
 public class Hardware {
     //Configuration Constants
-    private static final String LEFT_FRONT_MOTOR = "lf";
-    private static final String RIGHT_FRONT_MOTOR = "rf";
-    private static final String LEFT_REAR_MOTOR = "lr";
-    private static final String RIGHT_REAR_MOTOR = "rr";
+    private static final String LEFT_MOTOR = "lm";
+    private static final String RIGHT_MOTOR = "rm";
     private static final String JEWEL_SERVO = "js";
     private static final String COLOR_SENSOR = "cs";
+    private static final String LIGHT_SENSOR = "ls";
     final static String IMU = "imu";
-
-    private static final DcMotor.Direction LEFT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    private static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
-    private static final DcMotor.Direction LEFT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
-    private static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     public static final double JEWEL_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
+    private static final double GREY_VALUE = 4;
+    private static final double BROWN_VALUE = 2;
 
     //Hardware Devices
-    DcMotor leftFrontMotor;
-    DcMotor rightFrontMotor;
-    DcMotor leftRearMotor;
-    DcMotor rightRearMotor;
+    DcMotor leftMotor;
+    DcMotor rightMotor;
     Servo jewelServo;
     BNO055IMU imu;
+    OpticalDistanceSensor lightSensor;
 
     private byte[] colorCache;
     private I2cDevice colorSensor;
@@ -79,21 +76,30 @@ public class Hardware {
         }
     }
 
+    enum Glyph {
+        GREY("Grey"),
+        BROWN("Brown"),
+        NONE("None");
+
+        String description;
+
+        public String toString() {
+            return description;
+        }
+
+        Glyph(String description) {
+            this.description = description;
+        }
+    }
+
     private void initialize() {
-        leftFrontMotor = getHardwareDevice(DcMotor.class, LEFT_FRONT_MOTOR);
-        rightRearMotor = getHardwareDevice(DcMotor.class, RIGHT_REAR_MOTOR);
-        leftRearMotor = getHardwareDevice(DcMotor.class, LEFT_REAR_MOTOR);
-        rightFrontMotor = getHardwareDevice(DcMotor.class, RIGHT_FRONT_MOTOR);
+        leftMotor = getHardwareDevice(DcMotor.class, LEFT_MOTOR);
+        rightMotor = getHardwareDevice(DcMotor.class, RIGHT_MOTOR);
         jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
         colorSensor = getHardwareDevice(I2cDevice.class, COLOR_SENSOR);
         colorReader = new I2cDeviceSynchImpl(colorSensor, I2cAddr.create8bit(0x3c), false);
         imu = getHardwareDevice(BNO055IMU.class, IMU);
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
-
-        leftFrontMotor.setDirection(LEFT_FRONT_MOTOR_DIRECTION);
-        rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
-        leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
-        rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
 
         colorReader.engage();
         colorReader.write8(3, 0);
@@ -110,118 +116,8 @@ public class Hardware {
 
 
     public void setDriveTrainRunMode(DcMotor.RunMode runMode) {
-        leftFrontMotor.setMode(runMode);
-        rightFrontMotor.setMode(runMode);
-        leftRearMotor.setMode(runMode);
-        rightRearMotor.setMode(runMode);
-    }
-
-    private void drive(double forwardValue, double sideValue, double rotationValue) {
-        double leftFrontPower;
-        double leftRearPower;
-        double rightFrontPower;
-        double rightRearPower;
-
-        leftFrontPower = forwardValue + sideValue + rotationValue;
-        leftRearPower = forwardValue - sideValue + rotationValue;
-        rightFrontPower = forwardValue - sideValue - rotationValue;
-        rightRearPower = forwardValue + sideValue - rotationValue;
-
-        double max = Double.MIN_VALUE;
-        if (Math.abs(leftFrontPower) > max)
-            max = Math.abs(leftFrontPower);
-        if (Math.abs(leftRearPower) > max)
-            max = Math.abs(leftRearPower);
-        if (Math.abs(rightFrontPower) > max)
-            max = Math.abs(rightFrontPower);
-        if (Math.abs(rightRearPower) > max)
-            max = Math.abs(rightRearPower);
-        if (max > 1) {
-            leftFrontPower /= max;
-            leftRearPower /= max;
-            rightFrontPower /= max;
-            rightRearPower /= max;
-        }
-
-        leftFrontMotor.setPower(leftFrontPower);
-        leftRearMotor.setPower(leftRearPower);
-        rightFrontMotor.setPower(rightFrontPower);
-        rightRearMotor.setPower(rightRearPower);
-    }
-
-    public double turn(double finalHeading) {
-        while (finalHeading < -180){
-            finalHeading += 360;
-        }
-        while (finalHeading > 180){
-            finalHeading -= 360;
-        }
-
-        double heading = getAngle();
-
-
-        if (heading > 180) { // convert 0 - 360 range of heading to -180 - 180
-            heading += 180;
-            heading %= 360;
-            heading -= 180;
-        }
-
-        double turnPower;
-        if (Math.abs(heading - finalHeading) > 120) {
-            turnPower = 1;
-        } else if (Math.abs(heading - finalHeading) > 90) {
-            turnPower = .7;
-        } else if (Math.abs(heading - finalHeading) > 40) {
-            turnPower = .4;
-        } else if (Math.abs(heading - finalHeading) > 30) {
-            turnPower = .35;
-        } else if (Math.abs(heading - finalHeading) > 25) {
-            turnPower = .3;
-        } else if (Math.abs(heading - finalHeading) > 20) {
-            turnPower = .2;
-
-        } else if (Math.abs(heading - finalHeading) > 15) {
-            turnPower = .2;
-
-        } else if (Math.abs(heading - finalHeading) > 10) {
-            turnPower = .15;
-        } else if (Math.abs(heading - finalHeading) > 5) {
-            turnPower = .15;
-        } else {
-            turnPower = .10;
-        }
-
-        if (Math.abs(heading - finalHeading) < 3
-                ) {
-            return 0;
-        }
-
-        if (heading <= 180 && heading >= 0 && finalHeading <= 180 && finalHeading >= 0) {
-            if (finalHeading > heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading >= -180 && heading <= 0 && finalHeading >= -180 && finalHeading <= 0) {
-            if (finalHeading > heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading >= -180 && heading <= 0 && finalHeading <= 180 && finalHeading >= 0) {
-            if (finalHeading - heading < (heading + 360) - finalHeading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading <= 180 && heading >= 0 && finalHeading >= -180 && finalHeading <= 0) {
-            if (heading - finalHeading > (finalHeading + 360) - heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        }
-        return .00005;
+        leftMotor.setMode(runMode);
+        rightMotor.setMode(runMode);
     }
 
     //Find angle from gyro
@@ -253,6 +149,7 @@ public class Hardware {
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
         VuforiaTrackables relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
         relicTemplate = relicTrackables.get(0);
+
         relicTemplate.setName("relicVuMarkTemplate");
 
         relicTrackables.activate();
@@ -262,14 +159,72 @@ public class Hardware {
         return RelicRecoveryVuMark.from(relicTemplate);
     }
 
-    public ColorDetected getColorDetected(){
+    public ColorDetected getColorDetected() {
         colorCache = colorReader.read(0x04, 1);
-         if (colorCache[0]>1 && colorCache[0]<4){
-             return ColorDetected.BLUE;
-         }
-         if (colorCache[0]>9 && colorCache[0]<12){
-             return ColorDetected.RED;
-         }
-         return ColorDetected.NONE;
+        if (colorCache[0] > 1 && colorCache[0] < 4) {
+            return ColorDetected.BLUE;
+        }
+        if (colorCache[0] > 9 && colorCache[0] < 12) {
+            return ColorDetected.RED;
+        }
+        return ColorDetected.NONE;
     }
+
+    public Glyph getGlyphDetected() {
+        double lightDetected = lightSensor.getLightDetected();
+        if (lightDetected < GREY_VALUE && lightDetected > GREY_VALUE - 0.2) {
+            return Glyph.GREY;
+        }
+        if (lightDetected < BROWN_VALUE && lightDetected > BROWN_VALUE - 0.2) {
+            return Glyph.BROWN;
+        }
+        return Glyph.NONE;
+    }
+
+    Glyph cipherPattern[][][] =
+            {
+                    { //Frog
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN}
+                    },
+                    { //Frog Inverse
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY}
+                    },
+                    { //Bird
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY}
+                    },
+                    { //Bird Inverse
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.BROWN},
+                    },
+                    { //Snake
+                            {Glyph.BROWN, Glyph.GREY, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.BROWN, Glyph.GREY},
+                            {Glyph.GREY, Glyph.BROWN, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.GREY, Glyph.BROWN},
+                    },
+                    { //Snake Inverse
+                            {Glyph.GREY, Glyph.BROWN, Glyph.BROWN},
+                            {Glyph.GREY, Glyph.GREY, Glyph.BROWN},
+                            {Glyph.BROWN, Glyph.GREY, Glyph.GREY},
+                            {Glyph.BROWN, Glyph.BROWN, Glyph.GREY},
+                    }
+            };
+    Glyph activeCipher [][]=
+            {
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE},
+                    {Glyph.NONE, Glyph.NONE, Glyph.NONE}
+            };
 }
