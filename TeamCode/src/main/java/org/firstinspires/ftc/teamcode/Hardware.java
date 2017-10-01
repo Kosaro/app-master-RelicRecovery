@@ -139,7 +139,7 @@ public class Hardware {
         rightRearMotor.setMode(runMode);
     }
 
-    private void drive(double forwardValue, double sideValue, double rotationValue) {
+    public void drive(double forwardValue, double sideValue, double rotationValue) {
         double leftFrontPower;
         double leftRearPower;
         double rightFrontPower;

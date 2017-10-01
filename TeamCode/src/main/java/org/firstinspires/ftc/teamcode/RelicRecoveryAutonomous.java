@@ -71,17 +71,30 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         sleep(1500);
         robot.getColorDetected();
         if (robot.getColorDetected() == getDesiredColor()){
-            //turn right!
+            while (robot.getAngle() > -15 && opModeIsActive()){
+                robot.drive(0, 0, robot.turn(-17));
+                idle();
+            }
         }
         else if (robot.getColorDetected() != Hardware.ColorDetected.NONE){
-            // turn left!
+            while (robot.getAngle() < 15 && opModeIsActive()){
+                robot.drive(0, 0, robot.turn(17));
+                idle();
+            }
         }
         else {
-            // do nothing OR random!!!!! rawr xD lolzor;
+            while (robot.getAngle() > -15 && opModeIsActive()){
+                robot.drive(0, 0, robot.turn(-17));
+                idle();
+            }// do nothing OR random!!!!! rawr xD lolzor;
         }
     }
 
     private void driveToCryptobox() {
+        while ((robot.getAngle() > 2 && robot.getAngle() < -2) && opModeIsActive()){
+            robot.drive(0, 0, robot.turn(0));
+            idle();
+        }
     }
 
     private void lineUpWithCryptoboxKey() {
