@@ -1,8 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
@@ -28,10 +29,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 public class Hardware {
     //Configuration Constants
-    private static final String LEFT_FRONT_MOTOR = "lf";
-    private static final String RIGHT_FRONT_MOTOR = "rf";
-    private static final String LEFT_REAR_MOTOR = "lr";
-    private static final String RIGHT_REAR_MOTOR = "rr";
+    private static final String LEFT_MOTOR = "lm";
+    private static final String RIGHT_MOTOR = "rm";
     private static final String JEWEL_SERVO = "js";
     private static final String COLOR_SENSOR = "cs";
     final static String IMU = "imu";
@@ -39,16 +38,9 @@ public class Hardware {
     public static final double JEWEL_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
 
-    public static final DcMotor.Direction LEFT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
-    public static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    public static final DcMotor.Direction LEFT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
-    public static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-
     //Hardware Devices
-    DcMotor leftFrontMotor;
-    DcMotor rightFrontMotor;
-    DcMotor leftRearMotor;
-    DcMotor rightRearMotor;
+    DcMotor leftMotor;
+    DcMotor rightMotor;
     Servo jewelServo;
     BNO055IMU imu;
 
@@ -78,20 +70,13 @@ public class Hardware {
     }
 
     private void initialize() {
-        leftFrontMotor = getHardwareDevice(DcMotor.class, LEFT_FRONT_MOTOR);
-        rightFrontMotor = getHardwareDevice(DcMotor.class, RIGHT_FRONT_MOTOR);
-        leftRearMotor = getHardwareDevice(DcMotor.class, LEFT_REAR_MOTOR);
-        rightRearMotor = getHardwareDevice(DcMotor.class, RIGHT_REAR_MOTOR);
+        leftMotor = getHardwareDevice(DcMotor.class, LEFT_MOTOR);
+        rightMotor = getHardwareDevice(DcMotor.class, RIGHT_MOTOR);
         jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
         colorSensor = getHardwareDevice(I2cDevice.class, COLOR_SENSOR);
         colorReader = new I2cDeviceSynchImpl(colorSensor, I2cAddr.create8bit(0x3c), false);
         imu = getHardwareDevice(BNO055IMU.class, IMU);
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
-
-        leftFrontMotor.setDirection(LEFT_FRONT_MOTOR_DIRECTION);
-        rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
-        leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
-        rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
 
         colorReader.engage();
         colorReader.write8(3, 0);
@@ -106,43 +91,10 @@ public class Hardware {
         imu.initialize(parameters);
     }
 
-    public void drive(double frontPower, double sidePower, double turnPower){
-        double leftFrontPower = frontPower + sidePower + turnPower;
-        double rightFrontPower = frontPower - sidePower - turnPower;
-        double leftRearPower = frontPower - sidePower + turnPower;
-        double rightRearPower = frontPower + sidePower - turnPower;
-
-        double maxValue = Double.MIN_VALUE;
-        if (maxValue < Math.abs(leftFrontPower)){
-            maxValue = Math.abs(leftFrontPower);
-        }
-        if (maxValue < Math.abs(rightFrontPower)){
-            maxValue = Math.abs(rightFrontPower);
-        }
-        if (maxValue < Math.abs(leftRearPower)){
-            maxValue = Math.abs(leftRearPower);
-        }
-        if (maxValue < Math.abs(rightRearPower)){
-            maxValue = Math.abs(rightRearPower);
-        }
-        if (maxValue > 1){
-            leftFrontPower /= maxValue;
-            rightFrontPower /= maxValue;
-            leftRearPower /= maxValue;
-            rightRearPower /= maxValue;
-        }
-
-        leftFrontMotor.setPower(leftFrontPower);
-        rightFrontMotor.setPower(rightFrontPower);
-        leftRearMotor.setPower(leftRearPower);
-        rightRearMotor.setPower(rightRearPower);
-    }
 
     public void setDriveTrainRunMode(DcMotor.RunMode runMode) {
-        leftFrontMotor.setMode(runMode);
-        rightFrontMotor.setMode(runMode);
-        leftRearMotor.setMode(runMode);
-        rightRearMotor.setMode(runMode);
+        leftMotor.setMode(runMode);
+        rightMotor.setMode(runMode);
     }
 
     //Find angle from gyro
@@ -192,67 +144,5 @@ public class Hardware {
              return ColorDetected.RED;
          }
          return ColorDetected.NONE;
-    }
-
-    public double turn(double finalHeading) {
-        finalHeading %= 360;
-        if (finalHeading > 180) {
-            finalHeading -= 360;
-        } else if (finalHeading < -180) {
-            finalHeading += 360;
-        }
-
-        double heading = getAngle();
-
-        double turnPower;
-        if (Math.abs(heading - finalHeading) > 120) {
-            turnPower = 1;
-        }
-        if (Math.abs(heading - finalHeading) > 90) {
-            turnPower = .7;
-        } else if (Math.abs(heading - finalHeading) > 40) {
-            turnPower = .3;
-        } else if (Math.abs(heading - finalHeading) > 20) {
-            turnPower = .2;
-
-        } else if (Math.abs(heading - finalHeading) > 10) {
-            turnPower = .1;
-        } else if (Math.abs(heading - finalHeading) > 5) {
-            turnPower = .1;
-        } else {
-            turnPower = .1;
-        }
-
-        if (Math.abs(heading - finalHeading) < 2) {
-            return 0;
-        }
-
-        if (heading <= 180 && heading >= 0 && finalHeading <= 180 && finalHeading >= 0) {
-            if (finalHeading > heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading >= -180 && heading <= 0 && finalHeading >= -180 && finalHeading <= 0) {
-            if (finalHeading > heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading >= -180 && heading <= 0 && finalHeading <= 180 && finalHeading >= 0) {
-            if (finalHeading - heading < (heading + 360) - finalHeading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        } else if (heading <= 180 && heading >= 0 && finalHeading >= -180 && finalHeading <= 0) {
-            if (heading - finalHeading > (finalHeading + 360) - heading) {
-                return turnPower;
-            } else {
-                return -turnPower;
-            }
-        }
-        return .00005;
-
     }
 }
