@@ -70,6 +70,8 @@ public class Hardware {
     private VuforiaLocalizer vuforia;
     private VuforiaTrackable relicTemplate;
 
+    public boolean robotOrientation;
+
     enum ColorDetected {
         BLUE("Blue"),
         RED("Red"),
@@ -131,7 +133,6 @@ public class Hardware {
         imu.initialize(parameters);
     }
 
-
     public void setDriveTrainRunMode(DcMotor.RunMode runMode) {
         leftFrontMotor.setMode(runMode);
         rightFrontMotor.setMode(runMode);
@@ -144,6 +145,11 @@ public class Hardware {
         double leftRearPower;
         double rightFrontPower;
         double rightRearPower;
+
+        if (robotOrientation == true){
+            forwardValue = -forwardValue;
+            sideValue = -sideValue;
+        }
 
         leftFrontPower = forwardValue + sideValue + rotationValue;
         leftRearPower = forwardValue - sideValue + rotationValue;

@@ -26,4 +26,13 @@ public class RelicRecoveryTeleOp extends OpMode {
 
     }
 
+    public void robotOrientation(){
+        if (gamepad1.right_bumper){
+            robot.robotOrientation = true;
+        }
+        if (gamepad1.left_bumper) {
+            robot.robotOrientation = false;
+        }
+    }
+
 }
