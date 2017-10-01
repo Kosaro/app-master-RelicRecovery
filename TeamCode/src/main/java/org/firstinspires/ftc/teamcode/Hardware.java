@@ -383,7 +383,7 @@ public class Hardware {
         fos.close();
     }
 
-    public void loadActiveCipherToFile() throws IOException, ClassNotFoundException {
+    public void loadActiveCipherFromFile() throws IOException, ClassNotFoundException {
         FileInputStream fis = hardwareMap.appContext.openFileInput(ACTIVE_CIPHER_FILE_NAME);
         ObjectInputStream is = new ObjectInputStream(fis);
         activeCipher = (Glyph[][]) is.readObject();
