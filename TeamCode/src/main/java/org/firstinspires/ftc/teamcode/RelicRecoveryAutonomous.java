@@ -89,6 +89,8 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                 idle();
             }// do nothing OR random!!!!! rawr xD lolzor;
         }
+        robot.jewelServo.setPosition(robot.JEWEL_SERVO_UP);
+
     }
 
     private void driveToCryptobox() {

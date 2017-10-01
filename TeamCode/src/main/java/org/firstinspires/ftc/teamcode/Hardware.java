@@ -61,6 +61,7 @@ public class Hardware {
     BNO055IMU imu;
     OpticalDistanceSensor lightSensor;
 
+
     private byte[] colorCache;
     private I2cDevice colorSensor;
     private I2cDeviceSynch colorReader;
