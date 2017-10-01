@@ -25,6 +25,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import static com.sun.tools.javac.main.Option.G;
 
 /**
@@ -46,6 +53,8 @@ public class Hardware {
     private static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction LEFT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+
+    private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
     public static final double JEWEL_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
@@ -365,4 +374,20 @@ public class Hardware {
                     {Glyph.NONE, Glyph.NONE, Glyph.NONE},
                     {Glyph.NONE, Glyph.NONE, Glyph.NONE}
             };
+
+    public void saveActiveCipherToFile() throws IOException {
+        FileOutputStream fos = hardwareMap.appContext.openFileOutput(ACTIVE_CIPHER_FILE_NAME, hardwareMap.appContext.MODE_PRIVATE);
+        ObjectOutputStream os = new ObjectOutputStream(fos);
+        os.writeObject(activeCipher);
+        os.close();
+        fos.close();
+    }
+
+    public void loadActiveCipherToFile() throws IOException, ClassNotFoundException {
+        FileInputStream fis = hardwareMap.appContext.openFileInput(ACTIVE_CIPHER_FILE_NAME);
+        ObjectInputStream is = new ObjectInputStream(fis);
+        activeCipher = (Glyph[][]) is.readObject();
+        is.close();
+        fis.close();
+    }
 }
