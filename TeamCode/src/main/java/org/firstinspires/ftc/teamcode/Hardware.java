@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -26,13 +24,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
-import static com.sun.tools.javac.main.Option.G;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by okosa on 9/9/2017.
@@ -44,7 +41,13 @@ public class Hardware {
     private static final String RIGHT_FRONT_MOTOR = "rf";
     private static final String LEFT_REAR_MOTOR = "lr";
     private static final String RIGHT_REAR_MOTOR = "rr";
+    private static final String LEFT_COLLECTOR_MOTOR = "lc";
+    private static final String RIGHT_COLLECTOR_MOTOR = "rc";
     private static final String JEWEL_SERVO = "js";
+    private static final String GRAB_SERVO = "Gs";
+    private static final String TILT_SERVO = "ts";
+    private static final String FLIP_SERVO = "fs";
+
     private static final String COLOR_SENSOR = "cs";
     private static final String LIGHT_SENSOR = "ls";
     final static String IMU = "imu";
@@ -53,10 +56,18 @@ public class Hardware {
     private static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction LEFT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    private static final DcMotor.Direction LEFT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    private static final DcMotor.Direction RIGHT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
     public static final double JEWEL_SERVO_DOWN = 0;
+    public static final double GRAB_SERVO_GRAB = 1;
+    public static final double GRAB_SERVO_RELEASE = 0;
+    public static final double FLIP_SERVO_UP = 1;
+    public static final double FLIP_SERVO_DOWN = 0;
+    public static final double TILT_SERVO_UP = 1;
+    public static final double TILT_SERVO_DOWN = 0;
     public static final double JEWEL_SERVO_UP = 1;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
@@ -66,7 +77,12 @@ public class Hardware {
     DcMotor rightFrontMotor;
     DcMotor leftRearMotor;
     DcMotor rightRearMotor;
+    DcMotor leftCollectorMotor;
+    DcMotor rightCollectorMotor;
     Servo jewelServo;
+    Servo tiltServo;
+    Servo grabServo;
+    Servo flipServo;
     BNO055IMU imu;
     OpticalDistanceSensor lightSensor;
 
@@ -78,8 +94,10 @@ public class Hardware {
     private HardwareMap hardwareMap;
     private VuforiaLocalizer vuforia;
     private VuforiaTrackable relicTemplate;
+    ArrayList<Integer> possibleCiphers;
 
-    public boolean robotOrientation;
+    public boolean robotOrientationForward;
+    public boolean glyphsFlippedUp;
 
     enum ColorDetected {
         BLUE("Blue"),
@@ -97,7 +115,7 @@ public class Hardware {
         }
     }
 
-    enum Glyph {
+    public enum Glyph {
         GREY("Grey"),
         BROWN("Brown"),
         NONE("None");
@@ -118,7 +136,12 @@ public class Hardware {
         rightRearMotor = getHardwareDevice(DcMotor.class, RIGHT_REAR_MOTOR);
         leftRearMotor = getHardwareDevice(DcMotor.class, LEFT_REAR_MOTOR);
         rightFrontMotor = getHardwareDevice(DcMotor.class, RIGHT_FRONT_MOTOR);
+        rightCollectorMotor = getHardwareDevice(DcMotor.class, RIGHT_COLLECTOR_MOTOR);
+        leftCollectorMotor = getHardwareDevice(DcMotor.class, LEFT_COLLECTOR_MOTOR);
         jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
+        tiltServo = getHardwareDevice(Servo.class, TILT_SERVO);
+        flipServo = getHardwareDevice(Servo.class, FLIP_SERVO);
+        grabServo = getHardwareDevice(Servo.class, GRAB_SERVO);
         colorSensor = getHardwareDevice(I2cDevice.class, COLOR_SENSOR);
         colorReader = new I2cDeviceSynchImpl(colorSensor, I2cAddr.create8bit(0x3c), false);
         imu = getHardwareDevice(BNO055IMU.class, IMU);
@@ -128,6 +151,8 @@ public class Hardware {
         rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
         leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
         rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
+        leftRearMotor.setDirection(LEFT_COLLECTOR_MOTOR_DIRECTION);
+        rightRearMotor.setDirection(RIGHT_COLLECTOR_MOTOR_DIRECTION);
 
         colorReader.engage();
         colorReader.write8(3, 0);
@@ -149,13 +174,14 @@ public class Hardware {
         rightRearMotor.setMode(runMode);
     }
 
+
     public void drive(double forwardValue, double sideValue, double rotationValue) {
         double leftFrontPower;
         double leftRearPower;
         double rightFrontPower;
         double rightRearPower;
 
-        if (robotOrientation == true){
+        if (robotOrientationForward == true) {
             forwardValue = -forwardValue;
             sideValue = -sideValue;
         }
@@ -187,11 +213,16 @@ public class Hardware {
         rightRearMotor.setPower(rightRearPower);
     }
 
+    public void setCollectorPower(double power){
+        leftCollectorMotor.setPower(power);
+        rightCollectorMotor.setPower(power);
+    }
+
     public double turn(double finalHeading) {
-        while (finalHeading < -180){
+        while (finalHeading < -180) {
             finalHeading += 360;
         }
-        while (finalHeading > 180){
+        while (finalHeading > 180) {
             finalHeading -= 360;
         }
 
@@ -262,8 +293,8 @@ public class Hardware {
         return .00005;
     }
 
-    public void stop(){
-        drive(0,0,0);
+    public void stop() {
+        drive(0, 0, 0);
     }
 
     //Find angle from gyro
@@ -276,6 +307,9 @@ public class Hardware {
         this.hardwareMap = hardwareMap;
         initialize();
         initializeImuParameters();
+        possibleCiphers = new ArrayList<Integer>(Arrays.asList(0, 1, 2, 3, 4, 5));
+        robotOrientationForward = true;
+        glyphsFlippedUp = true;
     }
 
     private <T> T getHardwareDevice(Class<? extends T> classOrInterface, String deviceName) {
@@ -327,7 +361,7 @@ public class Hardware {
         return Glyph.NONE;
     }
 
-    Glyph cipherPattern[][][] =
+    final public Glyph cipherPattern[][][] =
             {
                     { //Frog
                             {Glyph.GREY, Glyph.BROWN, Glyph.GREY},
@@ -366,7 +400,7 @@ public class Hardware {
                             {Glyph.BROWN, Glyph.BROWN, Glyph.GREY},
                     }
             };
-    Glyph activeCipher [][]=
+    Glyph activeCipher[][] =
             {
                     {Glyph.NONE, Glyph.NONE, Glyph.NONE},
                     {Glyph.NONE, Glyph.NONE, Glyph.NONE},
@@ -382,11 +416,47 @@ public class Hardware {
         fos.close();
     }
 
-    public void loadActiveCipherToFile() throws IOException, ClassNotFoundException {
+    public void loadActiveCipherFromFile() throws IOException, ClassNotFoundException {
         FileInputStream fis = hardwareMap.appContext.openFileInput(ACTIVE_CIPHER_FILE_NAME);
         ObjectInputStream is = new ObjectInputStream(fis);
         activeCipher = (Glyph[][]) is.readObject();
         is.close();
         fis.close();
+    }
+
+    void updatePossibleCiphers() {
+        for (int i = possibleCiphers.size() - 1; i <= 0; i--) {
+            if (!isCipherPossible(possibleCiphers.get(i))) {
+                possibleCiphers.remove(i);
+            }
+        }
+    }
+/**
+    int getNextColumn(Glyph glyph1, Glyph glyph2) {
+        for (int i = 0; i < possibleCiphers.size(); i++) {
+            for (int y = 0; y < cipherPattern[i][0].length; i++) {
+                for (int x = cipherPattern[i].length - 1; x >= 0; x--) {
+                    if (activeCipher[y][x] == Glyph.NONE){
+                        if (glyph1 == cipherPattern[i][y][x]){
+                            if (glyph2 == Glyph.NONE){
+
+                            }else if (x - 1 >= 0 && glyph2 == cipherPattern[i][y][x - 1])
+                        }
+                    }
+                }
+            }
+        }
+    }
+ **/
+
+    boolean isCipherPossible(int cipherNumber) {
+        for (int j = cipherPattern[cipherNumber].length - 1; j >= 0; j--) {
+            for (int k = 0; k < cipherPattern[cipherNumber][j].length; k++) {
+                if (activeCipher[j][k] != Hardware.Glyph.NONE && activeCipher[j][k] != cipherPattern[cipherNumber][j][k]) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

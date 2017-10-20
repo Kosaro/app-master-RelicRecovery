@@ -70,6 +70,14 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         telemetry.addData("Status", "Place Glyph in Cryptobox");
         telemetry.update();
         placeGlyphInCryptoBox();
+
+        telemetry.addData("Status", "Saving Cipher to File");
+        telemetry.update();
+        try {
+            robot.saveActiveCipherToFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -155,7 +163,6 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
     private void placeGlyphInCryptoBox() {
     }
-
 
 
     abstract Hardware.ColorDetected getDesiredColor();
