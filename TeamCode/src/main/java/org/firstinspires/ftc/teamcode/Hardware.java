@@ -73,31 +73,34 @@ public class Hardware {
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
-    public static final double JEWEL_SERVO_DOWN = 0;
-    public static final double GRAB_BOTTOM_SERVO_GRAB = .60; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = .54;
-    public static final double GRAB_TOP_SERVO_GRAB = .60;
-    public static final double GRAB_TOP_SERVO_RELEASE = .54;
+
+    public static final double GRAB_BOTTOM_SERVO_GRAB = .665; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = .481;
+    public static final double GRAB_TOP_SERVO_GRAB = .50;
+    public static final double GRAB_TOP_SERVO_RELEASE = .7;
     public static final double FLIP_SERVO_UP = .04;
     public static final double FLIP_SERVO_DOWN = .98;
-    public static final double RELIC_GRAB_SERVO_GRAB = 1;
-    public static final double RELIC_GRAB_SERVO_RELEASE = 0;
-    public static final double RELIC_TILT_SERVO_UPPER_LIMIT = 1;
-    public static final double RELIC_TILT_SERVO_LOWER_LIMIT = 0;
+    public static final double RELIC_GRAB_SERVO_GRAB = 0;
+    public static final double RELIC_GRAB_SERVO_RELEASE = .7544;
+    public static final double RELIC_TILT_SERVO_UPPER_LIMIT =  .8394;
+    public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .02055;
     public double relicTiltServoValue = .5;;
-    public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = 1;
-    public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = 0;
-    public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = 1;
-    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = 0;
+    public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = .2588;
+    public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = .7833;
+    public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = .78;
+    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = .153;
     public double relicArmTiltServoValue = .5;
-    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 1;
-    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0;
-    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = 1;
-    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = 0;
+    double relicArmTiltSpeed = .07602; //change in position per second
+    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = .683;
+    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = .453;
+    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = 0;
+    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .5;
+    double relicArmExtendSpeed = .0625 ; //change in position per second
     public double relicArmExtendServoValue = .5;
     public static final double TILT_SERVO_UP = 1;
+    public static final double JEWEL_SERVO_DOWN = 0;
     public static final double TILT_SERVO_DOWN = 0;
-    public static final double JEWEL_SERVO_UP = 1;
+    public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
     private static final double RED_THRESHOLD = 10;
@@ -471,7 +474,7 @@ public class Hardware {
         }
     }
     Double previousRelicArmTiltTime = null;
-    double relicArmTiltSpeed = .1; //change in position per second
+
     void incrementRelicArmTiltPosition(double x, double gameTime){
         if (previousRelicArmTiltTime == null){
             previousRelicArmTiltTime = gameTime;
@@ -486,7 +489,7 @@ public class Hardware {
     }
 
     Double previousRelicArmExtendTime = null;
-    double relicArmExtendSpeed = .1; //change in position per second
+
     void incrementRelicArmExtendPosition(double x, double gameTime){
         if (previousRelicArmExtendTime == null){
             previousRelicArmExtendTime = gameTime;
@@ -503,16 +506,20 @@ public class Hardware {
     void setRelicTiltServoPosition(){
         if (isRelicTiltParallelToGround){
             relicTiltServo.setPosition(Range.scale(Math.PI / 2 - Range.scale(relicArmTiltServo.getPosition(),
-                    RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE,
-                    0, Math.PI / 2), 0, Math.PI / 2, RELIC_TILT_SERVO_0_DEGREE_VALUE,
-                    RELIC_TILT_SERVO_90_DEGREE_VALUE));
+                    RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE,
+                    0, Math.PI / 2), 0, Math.PI / 2, RELIC_TILT_SERVO_90_DEGREE_VALUE,
+                    RELIC_TILT_SERVO_0_DEGREE_VALUE));
         }
         else{
             relicTiltServo.setPosition(Range.scale(relicArmTiltServo.getPosition(),
-                    RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE,
-                    RELIC_TILT_SERVO_0_DEGREE_VALUE, RELIC_TILT_SERVO_90_DEGREE_VALUE));
+                    RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE,
+                    RELIC_TILT_SERVO_90_DEGREE_VALUE, RELIC_TILT_SERVO_0_DEGREE_VALUE));
 
         }
+        if (relicTiltServo.getPosition() > RELIC_TILT_SERVO_UPPER_LIMIT)
+            relicTiltServo.setPosition(RELIC_ARM_TILT_SERVO_UPPER_LIMIT);
+        else if (relicTiltServo.getPosition() < RELIC_TILT_SERVO_LOWER_LIMIT)
+            relicTiltServo.setPosition(RELIC_TILT_SERVO_LOWER_LIMIT);
     }
 
     public Glyph getGlyphDetected() {
