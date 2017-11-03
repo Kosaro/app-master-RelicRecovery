@@ -74,32 +74,33 @@ public class Hardware {
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = .665; //new
+    public static final double GRAB_BOTTOM_SERVO_GRAB = .62; //new
     public static final double GRAB_BOTTOM_SERVO_RELEASE = .481;
-    public static final double GRAB_TOP_SERVO_GRAB = .50;
+    public static final double GRAB_TOP_SERVO_GRAB = .6;
     public static final double GRAB_TOP_SERVO_RELEASE = .7;
-    public static final double FLIP_SERVO_UP = .04;
+    public static final double FLIP_SERVO_UP = .07;
     public static final double FLIP_SERVO_DOWN = .98;
-    public static final double RELIC_GRAB_SERVO_GRAB = 0;
-    public static final double RELIC_GRAB_SERVO_RELEASE = .7544;
-    public static final double RELIC_TILT_SERVO_UPPER_LIMIT =  .8394;
-    public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .02055;
-    public double relicTiltServoValue = .5;;
-    public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = .2588;
-    public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = .7833;
+    public static final double RELIC_GRAB_SERVO_GRAB = .52;
+    public static final double RELIC_GRAB_SERVO_RELEASE = .35;
+    public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
+    public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
+    public double relicTiltServoValue = .5;
+    ;
+    public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = 0.491111111;
+    public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = 0.968888889;
     public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = .78;
-    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = .153;
+    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = .16;
     public double relicArmTiltServoValue = .5;
     double relicArmTiltSpeed = .07602; //change in position per second
-    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = .683;
-    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = .453;
-    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = 0;
-    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .5;
-    double relicArmExtendSpeed = .0625 ; //change in position per second
+    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.480555556;
+    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.698888889;
+    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .03;
+    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .48;
+    double relicArmExtendSpeed = .0625; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = 1;
-    public static final double JEWEL_SERVO_DOWN = 0;
-    public static final double TILT_SERVO_DOWN = 0;
+    public static final double TILT_SERVO_UP = 0.712;
+    public static final double TILT_SERVO_DOWN = 0.956;
+    public static final double JEWEL_SERVO_DOWN = .7;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
@@ -173,19 +174,20 @@ public class Hardware {
         }
     }
 
+
     Thread slowFlip = null;
     boolean flipServoIsUp = true;
 
     public void setFlipServoUp(boolean flipUp) {
         final double target;
-        if (tiltServo.getPosition() == TILT_SERVO_UP && touchSensorBottom.getState() == true) {
+        if (isApproximatelyEqual(tiltServo.getPosition(), TILT_SERVO_UP) && touchSensorBottom.getState() == true) {
             if (flipUp) {
                 target = FLIP_SERVO_UP;
                 flipServoIsUp = true;
             } else {
                 target = FLIP_SERVO_DOWN;
                 flipServoIsUp = false;
-            }
+            }/**
             if (slowFlip != null && slowFlip.isAlive()) {
                 slowFlip.interrupt();
             }
@@ -216,6 +218,8 @@ public class Hardware {
                 }
             };
             slowFlip.start();
+             */
+            flipServo.setPosition(target);
         }
     }
 
@@ -259,10 +263,12 @@ public class Hardware {
         rightCollectorMotor.setDirection(RIGHT_COLLECTOR_MOTOR_DIRECTION);
         liftMotor.setDirection(LIFT_MOTOR_DIRECTION);
 
-        //tiltServo.setPosition(TILT_SERVO_DOWN);
-        // flipServo.setPosition(FLIP_SERVO_UP);
-        //grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
-        //grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
+        tiltServo.setPosition(TILT_SERVO_DOWN);
+        flipServo.setPosition(FLIP_SERVO_UP);
+        grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
+        grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
+        relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
+        relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
     }
 
     //Initialize IMU
@@ -473,53 +479,63 @@ public class Hardware {
             }
         }
     }
-    Double previousRelicArmTiltTime = null;
 
-    void incrementRelicArmTiltPosition(double x, double gameTime){
-        if (previousRelicArmTiltTime == null){
+    Double previousRelicArmTiltTime = null;
+    Double relicArmServoTiltPosition = null;
+
+    void incrementRelicArmTiltPosition(double x, double gameTime) {
+        if (previousRelicArmTiltTime == null || relicArmServoTiltPosition == null) {
             previousRelicArmTiltTime = gameTime;
-        }else {
-            relicArmTiltServo.setPosition(relicArmTiltServo.getPosition() + x * relicArmTiltSpeed * (gameTime - previousRelicArmTiltTime));
-            if (relicArmTiltServo.getPosition() < RELIC_ARM_TILT_SERVO_LOWER_LIMIT)
-                relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
-            else if (relicArmTiltServo.getPosition() > RELIC_ARM_TILT_SERVO_UPPER_LIMIT)
-                relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_UPPER_LIMIT);
+            relicArmServoTiltPosition = relicArmTiltServo.getPosition();
+        } else {
+            relicArmServoTiltPosition += x * relicArmTiltSpeed * (gameTime - previousRelicArmTiltTime);
+            if (relicArmServoTiltPosition < RELIC_ARM_TILT_SERVO_LOWER_LIMIT) {
+                relicArmServoTiltPosition = RELIC_ARM_TILT_SERVO_LOWER_LIMIT;
+            } else if (relicArmServoTiltPosition > RELIC_ARM_TILT_SERVO_UPPER_LIMIT)
+                relicArmServoTiltPosition = RELIC_ARM_TILT_SERVO_UPPER_LIMIT;
             previousRelicArmTiltTime = gameTime;
+            relicArmTiltServo.setPosition(relicArmServoTiltPosition);
         }
     }
 
     Double previousRelicArmExtendTime = null;
+    Double relicArmServoExtendPosition = null;
 
-    void incrementRelicArmExtendPosition(double x, double gameTime){
-        if (previousRelicArmExtendTime == null){
+    void incrementRelicArmExtendPosition(double x, double gameTime) {
+        if (previousRelicArmExtendTime == null || relicArmServoExtendPosition == null) {
             previousRelicArmExtendTime = gameTime;
-        }else {
-            relicArmExtendServo.setPosition(relicArmExtendServo.getPosition() + x * relicArmExtendSpeed * (gameTime - previousRelicArmExtendTime));
-            if (relicArmExtendServo.getPosition() < RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT)
-                relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT);
-            else if (relicArmExtendServo.getPosition() > RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT)
-                relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
-            previousRelicArmTiltTime = gameTime;
+            relicArmServoExtendPosition = relicArmExtendServo.getPosition();
+        } else {
+            relicArmServoExtendPosition += x * relicArmExtendSpeed * (gameTime - previousRelicArmExtendTime);
+            if (relicArmServoExtendPosition < RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT) {
+                relicArmServoExtendPosition = RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT;
+            } else if (relicArmServoExtendPosition > RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT) {
+                relicArmServoExtendPosition = RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT;
+            }
+            previousRelicArmExtendTime = gameTime;
+            relicArmExtendServo.setPosition(relicArmServoExtendPosition);
         }
     }
 
-    void setRelicTiltServoPosition(){
-        if (isRelicTiltParallelToGround){
-            relicTiltServo.setPosition(Range.scale(Math.PI / 2 - Range.scale(relicArmTiltServo.getPosition(),
-                    RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE,
-                    0, Math.PI / 2), 0, Math.PI / 2, RELIC_TILT_SERVO_90_DEGREE_VALUE,
-                    RELIC_TILT_SERVO_0_DEGREE_VALUE));
-        }
-        else{
-            relicTiltServo.setPosition(Range.scale(relicArmTiltServo.getPosition(),
-                    RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE,
-                    RELIC_TILT_SERVO_90_DEGREE_VALUE, RELIC_TILT_SERVO_0_DEGREE_VALUE));
+    void setRelicTiltServoPosition() {
+        double position;
+        if (isRelicTiltParallelToGround) {
+            position = (Range.scale(Range.scale(relicArmTiltServo.getPosition(),
+                    RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE,
+                    0, Math.PI / 4), 0, Math.PI / 4, RELIC_TILT_SERVO_0_DEGREE_VALUE,
+                    RELIC_TILT_SERVO_90_DEGREE_VALUE));
+        } else {
+            position = (Range.scale(-Math.PI / 4 + Range.scale(relicArmTiltServo.getPosition(),
+                    RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE, RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE,
+                    0, Math.PI / 4), 0, Math.PI / 4, RELIC_TILT_SERVO_0_DEGREE_VALUE,
+                    RELIC_TILT_SERVO_90_DEGREE_VALUE));
 
         }
-        if (relicTiltServo.getPosition() > RELIC_TILT_SERVO_UPPER_LIMIT)
-            relicTiltServo.setPosition(RELIC_ARM_TILT_SERVO_UPPER_LIMIT);
-        else if (relicTiltServo.getPosition() < RELIC_TILT_SERVO_LOWER_LIMIT)
-            relicTiltServo.setPosition(RELIC_TILT_SERVO_LOWER_LIMIT);
+        if (position > RELIC_TILT_SERVO_UPPER_LIMIT)
+            position = (RELIC_TILT_SERVO_UPPER_LIMIT);
+        else if (position < RELIC_TILT_SERVO_LOWER_LIMIT)
+            position = (RELIC_TILT_SERVO_LOWER_LIMIT);
+        relicTiltServo.setPosition(position);
     }
 
     public Glyph getGlyphDetected() {
@@ -599,7 +615,7 @@ public class Hardware {
     void setLiftPower(double power) {
         if (touchSensorBottom.getState() == false && power < 0)
             liftMotor.setPower(0);
-        else if (touchSensorTop.getState() == false && power > 0)
+        else if ((isApproximatelyEqual(tiltServo.getPosition(), TILT_SERVO_DOWN) || touchSensorTop.getState() == false) && power > 0)
             liftMotor.setPower(0);
         else
             liftMotor.setPower(power);
@@ -644,8 +660,12 @@ public class Hardware {
 
     static double powWithoutLosingNegative(double n, double power) {
         double result = Math.pow(n, power);
-         if (result > 0 && n < 0)
-             result = -result;
+        if (result > 0 && n < 0)
+            result = -result;
         return result;
+    }
+
+    static boolean isApproximatelyEqual(double x, double y){
+        return Math.abs(x - y) < .02;
     }
 }
