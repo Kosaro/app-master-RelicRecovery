@@ -100,7 +100,7 @@ public class Hardware {
     public double relicArmExtendServoValue = .5;
     public static final double TILT_SERVO_UP = 0.724444444 ;
     public static final double TILT_SERVO_DOWN = 0.956;
-    public static final double JEWEL_SERVO_DOWN = .7;
+    public static final double JEWEL_SERVO_DOWN = .74 ;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
@@ -268,6 +268,7 @@ public class Hardware {
         grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
         grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
         relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
+        jewelServo.setPosition(JEWEL_SERVO_UP);
 
     }
 
@@ -365,21 +366,21 @@ public class Hardware {
         } else if (Math.abs(heading - finalHeading) > 40) {
             turnPower = .5;
         } else if (Math.abs(heading - finalHeading) > 30) {
-            turnPower = .4;
+            turnPower = .6;
         } else if (Math.abs(heading - finalHeading) > 25) {
-            turnPower = .4;
+            turnPower = .6;
         } else if (Math.abs(heading - finalHeading) > 20) {
-            turnPower = .3;
+            turnPower = .6;
 
         } else if (Math.abs(heading - finalHeading) > 15) {
-            turnPower = .2;
+            turnPower = .5;
 
         } else if (Math.abs(heading - finalHeading) > 10) {
-            turnPower = .1;
+            turnPower = .4;
         } else if (Math.abs(heading - finalHeading) > 5) {
-            turnPower = .05;
+            turnPower = .3;
         } else {
-            turnPower = .02;
+            turnPower = .1;
         }
 
         if (Math.abs(heading - finalHeading) < 1
