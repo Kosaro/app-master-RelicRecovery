@@ -30,7 +30,7 @@ public class RelicRecoveryTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad1.left_stick_button || gamepad1.right_stick_button) {
+        if (gamepad1.left_bumper || gamepad1.right_bumper) {
             robot.speedMultiplier = .5;
         } else {
             robot.speedMultiplier = 1;
@@ -38,6 +38,7 @@ public class RelicRecoveryTeleOp extends OpMode {
         robot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.setCollectorPower(gamepad1.right_trigger - gamepad1.left_trigger);
         driveDirection();
+        /*(
         if (gamepad1.right_bumper) {
             robot.leftCollectorMotor.setPower(1);
             robot.rightCollectorMotor.setPower(-1);
@@ -45,6 +46,7 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.leftCollectorMotor.setPower(-1);
             robot.rightCollectorMotor.setPower(1);
         }
+        */
 
         if (gamepad2.back != previousSelectedValue) {
             if (gamepad2.back) {

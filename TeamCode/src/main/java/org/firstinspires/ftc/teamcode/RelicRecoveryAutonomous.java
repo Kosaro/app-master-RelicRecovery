@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxUsbUtil;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
@@ -13,6 +14,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+
+import static org.firstinspires.ftc.teamcode.Hardware.RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE;
+import static org.firstinspires.ftc.teamcode.Hardware.RELIC_ARM_TILT_SERVO_LOWER_LIMIT;
 
 /**
  * Created by okosa on 9/9/2017.
@@ -44,6 +48,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         //robot.initializeVuforia();
         robot.setDriveTrainRunMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
 
         telemetry.addData("Status", "Decoding Pictograph");
         telemetry.update();
@@ -52,6 +57,8 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         telemetry.addData("Status", "Waiting For Start");
         telemetry.update();
         waitForStart();
+
+        //robot.relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE);
 
         telemetry.addData("Status", "Remove Jewel");
         telemetry.update();
@@ -100,32 +107,13 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         robot.jewelServo.setPosition(robot.JEWEL_SERVO_DOWN);
         sleep(1500);
         if (robot.getColorDetected() == getDesiredColor()) {
-            while (robot.getAngle() > -7 && opModeIsActive()) {
-                robot.drive(0, 0, robot.turn(-7));
-                telemetry.addData("Angle", robot.getAngle());
-                telemetry.addData("Color", robot.getColorDetected());
-                telemetry.addData("Detected", "Right");
-                telemetry.update();
-                idle();
-            }
+            driveInInches(3, .3);
         } else if (robot.getColorDetected() != Hardware.ColorDetected.NONE) {
-            while (robot.getAngle() < 7 && opModeIsActive()) {
-                robot.drive(0, 0, robot.turn(7));
-                telemetry.addData("Angle", robot.getAngle());
-                telemetry.addData("Color", robot.getColorDetected());
-                telemetry.addData("Detected", "Wrong");
-                telemetry.update();
-                idle();
-            }
+            driveInInches(-3, .3);
+            robot.jewelServo.setPosition(robot.JEWEL_SERVO_UP);
+            driveInInches(6, .3);
         } else {
-            while (robot.getAngle() > -7 && opModeIsActive()) {
-                robot.drive(0, 0, robot.turn(-7));
-                telemetry.addData("Angle", robot.getAngle());
-                telemetry.addData("Color", robot.getColorDetected());
-                telemetry.addData("Detected", "None");
-                telemetry.update();
-                idle();
-            }// do nothing OR random!!!!! rawr xD lolzor;
+            driveInInches(3, .3);// do nothing OR random!!!!! rawr xD lolzor;
         }
 
         robot.jewelServo.setPosition(robot.JEWEL_SERVO_UP);
@@ -142,6 +130,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     }
 
     private void driveToCryptobox() {
+        /**
         int finalPosition = 0;
         if (getDesiredColor() == Hardware.ColorDetected.RED) {
             if (cryptoboxKey == RelicRecoveryVuMark.RIGHT)
@@ -167,6 +156,8 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             idle();
         }
         robot.stop();
+         */
+        driveInInches(20, 1);
     }
 
     private void turnToCryptobox() {
@@ -180,6 +171,28 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     }
 
     private void placeGlyphInCryptoBox() {
+        robot.setTiltServoPositionUp(true);
+        driveInInches(5, .5);
+        robot.grabTopServo.setPosition(Hardware.GRAB_TOP_SERVO_RELEASE);
+        robot.grabTopServo.setPosition(Hardware.GRAB_TOP_SERVO_RELEASE);
+    }
+    int startingValue = 0;
+    void driveInInches(double x, double speed){
+        startingValue = robot.rightFrontMotor.getCurrentPosition();
+        double direction;
+        int target = (int) (x / (4 * Math.PI) * 1120);
+        if (target > startingValue){
+            direction = 1;
+        }else{
+            direction = -1;
+        }
+        robot.drive(direction * speed, 0, 0);
+        while (Math.abs(robot.rightFrontMotor.getCurrentPosition() - startingValue) < Math.abs(target) && opModeIsActive()){
+            telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
+            telemetry.update();
+            idle();
+        }
+        robot.drive(0, 0, 0);
     }
 
 

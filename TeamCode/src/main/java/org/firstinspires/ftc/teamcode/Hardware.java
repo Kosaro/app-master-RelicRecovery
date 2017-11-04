@@ -74,10 +74,10 @@ public class Hardware {
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = .62; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = .481;
-    public static final double GRAB_TOP_SERVO_GRAB = .6;
-    public static final double GRAB_TOP_SERVO_RELEASE = .7;
+    public static final double GRAB_BOTTOM_SERVO_GRAB = 0.645; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0.454444444;
+    public static final double GRAB_TOP_SERVO_GRAB = 0.583333333;
+    public static final double GRAB_TOP_SERVO_RELEASE = 0.748333333;
     public static final double FLIP_SERVO_UP = .07;
     public static final double FLIP_SERVO_DOWN = .98;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
@@ -98,7 +98,7 @@ public class Hardware {
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .48;
     double relicArmExtendSpeed = .0625; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = 0.712;
+    public static final double TILT_SERVO_UP = 0.724444444 ;
     public static final double TILT_SERVO_DOWN = 0.956;
     public static final double JEWEL_SERVO_DOWN = .7;
     public static final double JEWEL_SERVO_UP = .204;
@@ -268,7 +268,7 @@ public class Hardware {
         grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
         grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
         relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
-        relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
+
     }
 
     //Initialize IMU
