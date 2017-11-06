@@ -12,4 +12,9 @@ public class RedAutonomous extends RelicRecoveryAutonomous {
     Hardware.ColorDetected getDesiredColor() {
         return Hardware.ColorDetected.RED;
     }
+
+    @Override
+    boolean justJewel() {
+        return false;
+    }
 }

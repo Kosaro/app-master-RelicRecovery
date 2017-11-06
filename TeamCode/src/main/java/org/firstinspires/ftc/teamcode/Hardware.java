@@ -74,10 +74,10 @@ public class Hardware {
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = 0.645; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0.454444444;
+    public static final double GRAB_BOTTOM_SERVO_GRAB = 0.716666667; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0.581666667;
     public static final double GRAB_TOP_SERVO_GRAB = 0.583333333;
-    public static final double GRAB_TOP_SERVO_RELEASE = 0.748333333;
+    public static final double GRAB_TOP_SERVO_RELEASE = 0.699444444;
     public static final double FLIP_SERVO_UP = .07;
     public static final double FLIP_SERVO_DOWN = .98;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
@@ -98,9 +98,9 @@ public class Hardware {
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .48;
     double relicArmExtendSpeed = .0625; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = 0.724444444 ;
+    public static final double TILT_SERVO_UP = 0.724444444;
     public static final double TILT_SERVO_DOWN = 0.956;
-    public static final double JEWEL_SERVO_DOWN = .74 ;
+    public static final double JEWEL_SERVO_DOWN = .74;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
@@ -188,36 +188,35 @@ public class Hardware {
                 target = FLIP_SERVO_DOWN;
                 flipServoIsUp = false;
             }/**
-            if (slowFlip != null && slowFlip.isAlive()) {
-                slowFlip.interrupt();
+             if (slowFlip != null && slowFlip.isAlive()) {
+             slowFlip.interrupt();
+             }
+             slowFlip = new Thread() {
+            @Override public void run() {
+            super.run();
+            long lastTime = System.currentTimeMillis();
+            double duration = Math.abs(target - flipServo.getPosition()) * 1500;
+            int numOfIncrements = (int) (duration / 100);
+            double incrementDistance = (target - flipServo.getPosition()) / numOfIncrements;
+            for (int i = 0; i < numOfIncrements; i++) {
+            while (lastTime + 100 > System.currentTimeMillis()) {
+            try {
+            Thread.sleep(10);
+            } catch (InterruptedException e) {
+            e.printStackTrace();
             }
-            slowFlip = new Thread() {
-                @Override
-                public void run() {
-                    super.run();
-                    long lastTime = System.currentTimeMillis();
-                    double duration = Math.abs(target - flipServo.getPosition()) * 1500;
-                    int numOfIncrements = (int) (duration / 100);
-                    double incrementDistance = (target - flipServo.getPosition()) / numOfIncrements;
-                    for (int i = 0; i < numOfIncrements; i++) {
-                        while (lastTime + 100 > System.currentTimeMillis()) {
-                            try {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        lastTime += 100;
-                        flipServo.setPosition(flipServo.getPosition() + incrementDistance);
-                        if (flipServo.getPosition() > FLIP_SERVO_DOWN)
-                            flipServo.setPosition(FLIP_SERVO_DOWN);
-                        if (flipServo.getPosition() < FLIP_SERVO_UP)
-                            flipServo.setPosition(FLIP_SERVO_UP);
-                    }
-                    flipServo.setPosition(target);
-                }
+            }
+            lastTime += 100;
+            flipServo.setPosition(flipServo.getPosition() + incrementDistance);
+            if (flipServo.getPosition() > FLIP_SERVO_DOWN)
+            flipServo.setPosition(FLIP_SERVO_DOWN);
+            if (flipServo.getPosition() < FLIP_SERVO_UP)
+            flipServo.setPosition(FLIP_SERVO_UP);
+            }
+            flipServo.setPosition(target);
+            }
             };
-            slowFlip.start();
+             slowFlip.start();
              */
             flipServo.setPosition(target);
         }
@@ -244,32 +243,46 @@ public class Hardware {
         touchSensorTop = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_TOP);
         colorSensor = getHardwareDevice(LynxI2cColorRangeSensor.class, COLOR_SENSOR);
 
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled = true;
-        parameters.loggingTag = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu = getHardwareDevice(BNO055IMU.class, IMU);
-        imu.initialize(parameters);
-        //imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        if (imu != null) {
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            parameters.loggingEnabled = true;
+            parameters.loggingTag = "IMU";
+            parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+            imu.initialize(parameters);
+            //imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        }
 
-        leftFrontMotor.setDirection(LEFT_FRONT_MOTOR_DIRECTION);
-        rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
-        leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
-        rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
-        leftCollectorMotor.setDirection(LEFT_COLLECTOR_MOTOR_DIRECTION);
-        rightCollectorMotor.setDirection(RIGHT_COLLECTOR_MOTOR_DIRECTION);
-        liftMotor.setDirection(LIFT_MOTOR_DIRECTION);
+        if (leftFrontMotor != null)
+            leftFrontMotor.setDirection(LEFT_FRONT_MOTOR_DIRECTION);
+        if (rightFrontMotor != null)
+            rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
+        if (leftRearMotor != null)
+            leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
+        if (rightRearMotor != null)
+            rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
+        if (leftCollectorMotor != null)
+            leftCollectorMotor.setDirection(LEFT_COLLECTOR_MOTOR_DIRECTION);
+        if (rightCollectorMotor != null)
+            rightCollectorMotor.setDirection(RIGHT_COLLECTOR_MOTOR_DIRECTION);
+        if (liftMotor != null)
+            liftMotor.setDirection(LIFT_MOTOR_DIRECTION);
 
-        tiltServo.setPosition(TILT_SERVO_DOWN);
-        flipServo.setPosition(FLIP_SERVO_UP);
-        grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
-        grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
-        relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
-        jewelServo.setPosition(JEWEL_SERVO_UP);
-
+        if (tiltServo != null)
+            tiltServo.setPosition(TILT_SERVO_DOWN);
+        if (flipServo != null)
+            flipServo.setPosition(FLIP_SERVO_UP);
+        if (grabBottomServo != null)
+            grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
+        if (grabTopServo != null)
+            grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
+        if (relicArmExtendServo != null)
+            relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
+        if (jewelServo != null)
+            jewelServo.setPosition(JEWEL_SERVO_UP);
     }
 
     //Initialize IMU
@@ -313,7 +326,6 @@ public class Hardware {
         rightFrontPower = forwardValue - sideValue - rotationValue;
         rightRearPower = forwardValue + sideValue - rotationValue;
 
-
         double max = Double.MIN_VALUE;
         if (Math.abs(leftFrontPower) > max)
             max = Math.abs(leftFrontPower);
@@ -336,6 +348,16 @@ public class Hardware {
         rightRearMotor.setPower(rightRearPower);
     }
 
+    public void setGrabbersClosed(boolean closed){
+        if (closed){
+            grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_GRAB);
+            grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
+        }else{
+            grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
+            grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
+        }
+    }
+
     public void setCollectorPower(double power) {
         leftCollectorMotor.setPower(power);
         rightCollectorMotor.setPower(power);
@@ -351,7 +373,6 @@ public class Hardware {
 
         double heading = getAngle();
 
-
         if (heading > 180) { // convert 0 - 360 range of heading to -180 - 180
             heading += 180;
             heading %= 360;
@@ -362,11 +383,11 @@ public class Hardware {
         if (Math.abs(heading - finalHeading) > 120) {
             turnPower = 1;
         } else if (Math.abs(heading - finalHeading) > 90) {
-            turnPower = .7;
+            turnPower = 1;
         } else if (Math.abs(heading - finalHeading) > 40) {
-            turnPower = .5;
+            turnPower = .8;
         } else if (Math.abs(heading - finalHeading) > 30) {
-            turnPower = .6;
+            turnPower = .7;
         } else if (Math.abs(heading - finalHeading) > 25) {
             turnPower = .6;
         } else if (Math.abs(heading - finalHeading) > 20) {
@@ -383,7 +404,7 @@ public class Hardware {
             turnPower = .1;
         }
 
-        if (Math.abs(heading - finalHeading) < 1
+        if (Math.abs(heading - finalHeading) < 1.5
                 ) {
             return 0;
         }
@@ -412,7 +433,7 @@ public class Hardware {
                 return -turnPower;
             }
         }
-        return .00005;
+        return .00005; //The code should never get here. If this value is returned, there is an error in the logic above.
     }
 
     public void stop() {
@@ -518,7 +539,7 @@ public class Hardware {
         }
     }
 
-    void setRelicTiltServoPosition() {
+    void updateRelicTiltServoPosition() {
         double position;
         if (isRelicTiltParallelToGround) {
             position = (Range.scale(Range.scale(relicArmTiltServo.getPosition(),
@@ -659,14 +680,14 @@ public class Hardware {
         return true;
     }
 
-    static double powWithoutLosingNegative(double n, double power) {
+    static double powWithoutLosingNegative(double n, double power) { // something in this method is messed up
         double result = Math.pow(n, power);
         if (result > 0 && n < 0)
             result = -result;
         return result;
     }
 
-    static boolean isApproximatelyEqual(double x, double y){
+    static boolean isApproximatelyEqual(double x, double y) {
         return Math.abs(x - y) < .02;
     }
 }

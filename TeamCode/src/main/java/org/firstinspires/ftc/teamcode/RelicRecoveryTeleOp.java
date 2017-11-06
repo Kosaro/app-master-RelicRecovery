@@ -82,7 +82,7 @@ public class RelicRecoveryTeleOp extends OpMode {
 
 
             }
-            robot.setRelicTiltServoPosition();
+            robot.updateRelicTiltServoPosition();
 
         }
     }
@@ -97,18 +97,16 @@ public class RelicRecoveryTeleOp extends OpMode {
 
     public void pickUp() {
         if (gamepad2.a) {
-            robot.grabBottomServo.setPosition(Hardware.GRAB_BOTTOM_SERVO_GRAB);
-            robot.grabTopServo.setPosition(Hardware.GRAB_TOP_SERVO_GRAB);
+            robot.setGrabbersClosed(true);
         } else if (gamepad2.b) {
-            robot.grabBottomServo.setPosition(Hardware.GRAB_BOTTOM_SERVO_RELEASE);
-            robot.grabTopServo.setPosition(Hardware.GRAB_TOP_SERVO_RELEASE);
+            robot.setGrabbersClosed(false);
         }
     }
 
     public void flip() {
-        if (gamepad2.right_bumper) {
+        if (gamepad2.left_bumper) {
             robot.setFlipServoUp(true);
-        } else if (gamepad2.left_bumper) {
+        } else if (gamepad2.right_bumper) {
             robot.setFlipServoUp(false);
         }
     }
