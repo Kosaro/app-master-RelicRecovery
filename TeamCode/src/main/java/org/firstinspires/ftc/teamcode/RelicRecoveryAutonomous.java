@@ -66,9 +66,9 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
             telemetry.addData("Status", "Turn to Cryptobox");
             telemetry.update();
-            turnToCryptobox();
+            //turnToCryptobox();
 
-            sleep(1000);
+            //sleep(1000);
 
             telemetry.addData("Status", "Line Up With CryptoBox Key");
             telemetry.update();
@@ -197,10 +197,25 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     private void placeGlyphInCryptoBox() {
         robot.setTiltServoPositionUp(true);
         sleep(1500);
+        /**
         driveFor(-300, .25, 3);
         robot.setGrabbersClosed(false);
         robot.setTiltServoPositionUp(false);
         driveFor(100, .25, 2);
+         */
+    startingValue = robot.leftFrontMotor.getCurrentPosition();
+        while (Math.abs(robot.rightFrontMotor.getCurrentPosition() - startingValue) < Math.abs(400) && opModeIsActive() && getRuntime() < startTime + time) {
+            robot.drive(0, .5, 0);
+            telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
+            telemetry.update();
+            idle();
+        }
+
+        robot.turn(45);
+
+        driveFor(100, .5, 2);
+
+
     }
 
     int startingValue = 0;

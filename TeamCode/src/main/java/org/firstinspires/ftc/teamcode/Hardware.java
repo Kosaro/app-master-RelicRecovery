@@ -74,32 +74,32 @@ public class Hardware {
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = 0.716666667; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0.581666667;
+    public static final double GRAB_BOTTOM_SERVO_GRAB = .22; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0;
     public static final double GRAB_TOP_SERVO_GRAB = 0.583333333;
-    public static final double GRAB_TOP_SERVO_RELEASE = 0.699444444;
+    public static final double GRAB_TOP_SERVO_RELEASE = 0.8;
     public static final double FLIP_SERVO_UP = .07;
     public static final double FLIP_SERVO_DOWN = .98;
+    public static final double RELIC_GRAB_SERVO_RELEASE = .33 ;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
-    public static final double RELIC_GRAB_SERVO_RELEASE = .35;
     public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
     public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
     public double relicTiltServoValue = .5;
     ;
     public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = 0.491111111;
     public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = 0.968888889;
-    public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = .78;
-    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = .16;
+    public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = 0.970555556;
+    public static final double RELIC_ARM_TILT_SERVO_LOWER_LIMIT = 0.34;
     public double relicArmTiltServoValue = .5;
-    double relicArmTiltSpeed = .07602; //change in position per second
-    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.480555556;
-    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.698888889;
-    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .03;
-    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .48;
-    double relicArmExtendSpeed = .0625; //change in position per second
+    double relicArmTiltSpeed = .093; //change in position per second
+    public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.661111111;
+    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222;
+    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .0322222;
+    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .744444444;
+    double relicArmExtendSpeed = .07242937; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = 0.724444444;
-    public static final double TILT_SERVO_DOWN = 0.956;
+    public static final double TILT_SERVO_UP = 0.692777778;
+    public static final double TILT_SERVO_DOWN = 0.8;
     public static final double JEWEL_SERVO_DOWN = .74;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
@@ -256,20 +256,34 @@ public class Hardware {
             //imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
         }
 
-        if (leftFrontMotor != null)
+        if (leftFrontMotor != null) {
             leftFrontMotor.setDirection(LEFT_FRONT_MOTOR_DIRECTION);
-        if (rightFrontMotor != null)
+            leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (rightFrontMotor != null) {
             rightFrontMotor.setDirection(RIGHT_FRONT_MOTOR_DIRECTION);
-        if (leftRearMotor != null)
+            rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (leftRearMotor != null) {
             leftRearMotor.setDirection(LEFT_REAR_MOTOR_DIRECTION);
-        if (rightRearMotor != null)
+            leftRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (rightRearMotor != null) {
             rightRearMotor.setDirection(RIGHT_REAR_MOTOR_DIRECTION);
-        if (leftCollectorMotor != null)
+            rightRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (leftCollectorMotor != null) {
             leftCollectorMotor.setDirection(LEFT_COLLECTOR_MOTOR_DIRECTION);
-        if (rightCollectorMotor != null)
+            leftCollectorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (rightCollectorMotor != null) {
             rightCollectorMotor.setDirection(RIGHT_COLLECTOR_MOTOR_DIRECTION);
-        if (liftMotor != null)
+            rightCollectorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if (liftMotor != null) {
             liftMotor.setDirection(LIFT_MOTOR_DIRECTION);
+            liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
 
         if (tiltServo != null)
             tiltServo.setPosition(TILT_SERVO_DOWN);
@@ -285,14 +299,6 @@ public class Hardware {
             jewelServo.setPosition(JEWEL_SERVO_UP);
     }
 
-    //Initialize IMU
-    private void initializeImuParameters() {
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-
-        imu.initialize(parameters);
-    }
 
     public void setDriveTrainRunMode(DcMotor.RunMode runMode) {
         leftFrontMotor.setMode(runMode);

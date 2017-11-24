@@ -15,7 +15,7 @@ public class RelicRecoveryTeleOp extends OpMode {
     @Override
     public void init() {
         robot = new Hardware(hardwareMap);
-        robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     @Override
@@ -35,6 +35,11 @@ public class RelicRecoveryTeleOp extends OpMode {
         } else {
             robot.speedMultiplier = 1;
         }
+        telemetry.addData("Left Front Motor", robot.leftFrontMotor.getCurrentPosition());
+        telemetry.addData("Right Front Motor", robot.rightFrontMotor.getCurrentPosition());
+        telemetry.addData("Left Rear Motor", robot.leftRearMotor.getCurrentPosition());
+        telemetry.addData("Right Rear Motor", robot.rightRearMotor.getCurrentPosition());
+        telemetry.addData("Lift Motor", robot.liftMotor.getCurrentPosition());
         robot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.setCollectorPower(gamepad1.right_trigger - gamepad1.left_trigger);
         driveDirection();
@@ -59,11 +64,11 @@ public class RelicRecoveryTeleOp extends OpMode {
             flip();
             pickUp();
             tilt();
-            telemetry.addData("Touch Bottom", robot.touchSensorBottom.getState());
-            telemetry.addData("Touch Top", robot.touchSensorTop.getState());
-            telemetry.addData("p", robot.flipServo.getPosition());
-            telemetry.addData("t", robot.tiltServo.getPosition());
-            telemetry.addData("constant", Hardware.TILT_SERVO_UP);
+            //telemetry.addData("Touch Bottom", robot.touchSensorBottom.getState());
+            //telemetry.addData("Touch Top", robot.touchSensorTop.getState());
+            //telemetry.addData("p", robot.flipServo.getPosition());
+            //telemetry.addData("t", robot.tiltServo.getPosition());
+            //telemetry.addData("constant", Hardware.TILT_SERVO_UP);
         } else {
             if (gamepad2.y) {
                 robot.isRelicTiltParallelToGround = true;
