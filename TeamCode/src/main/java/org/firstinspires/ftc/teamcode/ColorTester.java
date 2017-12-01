@@ -15,7 +15,7 @@ public class ColorTester extends OpMode {
     public void init() {
         robot = new Hardware(hardwareMap);
     }
-
+ 
     @Override
     public void loop() {
         telemetry.addData("Blue Value", robot.colorSensor.blue());
