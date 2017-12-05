@@ -22,6 +22,7 @@ public class RelicRecoveryTeleOp extends OpMode {
     public void start() {
         super.start();
         robot.relicArmTiltServo.setPosition(Hardware.RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE);
+        robot.jewelServo.setPosition(Hardware.JEWEL_SERVO_UP);
     }
 
     boolean previousSelectedValue = false;

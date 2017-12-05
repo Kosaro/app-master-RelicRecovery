@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -9,16 +10,19 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 //@Disabled
 @TeleOp(name = "Vuforia Test")
-public class VuforiaTest extends OpMode{
+public class VuforiaTest extends LinearOpMode {
     Hardware robot;
-    @Override
-    public void init() {
-        robot = new Hardware(hardwareMap);
-        robot.initializeVuforia();
-    }
 
     @Override
-    public void loop() {
-        telemetry.addData("Cryptobox Key", robot.getPictograph());
+    public void runOpMode() throws InterruptedException {
+        robot = new Hardware(hardwareMap);
+        robot.initializeVuforia();
+        waitForStart();
+        while (opModeIsActive()) {
+            telemetry.addData("Cryptobox Key", robot.getPictograph());
+            telemetry.update();
+            idle();
+        }
     }
+
 }

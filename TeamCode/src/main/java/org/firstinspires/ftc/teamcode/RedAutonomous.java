@@ -14,7 +14,7 @@ public class RedAutonomous extends RelicRecoveryAutonomous {
     }
 
     @Override
-    boolean justJewel() {
+    boolean otherBalancingBoard() {
         return false;
     }
 }

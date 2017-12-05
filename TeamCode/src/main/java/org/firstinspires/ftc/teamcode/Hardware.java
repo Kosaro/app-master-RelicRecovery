@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxI2cColorRangeSensor;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -62,6 +64,8 @@ public class Hardware {
     final static String IMU = "imu";
     private static final String TOUCH_SENSOR_TOP = "tst";
     private static final String TOUCH_SENSOR_BOTTOM = "tsb";
+    private static final String TILT_GYRO = "tg";
+    private static final String RANGE_SENSOR = "rs"; //port 2
 
     private static final DcMotor.Direction LEFT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     private static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
@@ -74,18 +78,18 @@ public class Hardware {
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = .22; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = 0;
-    public static final double GRAB_TOP_SERVO_GRAB = 0.583333333;
+    public static final double GRAB_BOTTOM_SERVO_GRAB = .5438888888888888; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = .352222222222222222;
+    public static final double GRAB_TOP_SERVO_GRAB = 0.598333333;
     public static final double GRAB_TOP_SERVO_RELEASE = 0.8;
-    public static final double FLIP_SERVO_UP = .07;
+    public static final double FLIP_SERVO_UP = .05555;
     public static final double FLIP_SERVO_DOWN = .98;
     public static final double RELIC_GRAB_SERVO_RELEASE = .33 ;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
     public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
     public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
     public double relicTiltServoValue = .5;
-    ;
+
     public static final double RELIC_TILT_SERVO_90_DEGREE_VALUE = 0.491111111;
     public static final double RELIC_TILT_SERVO_0_DEGREE_VALUE = 0.968888889;
     public static final double RELIC_ARM_TILT_SERVO_UPPER_LIMIT = 0.970555556;
@@ -130,6 +134,8 @@ public class Hardware {
     DigitalChannel touchSensorTop;
     DigitalChannel touchSensorBottom;
     LynxI2cColorRangeSensor colorSensor;
+    ModernRoboticsI2cGyro tiltGyro;
+    ModernRoboticsI2cRangeSensor rangeSensor;
 
     //Local Variables
     private HardwareMap hardwareMap;
@@ -242,6 +248,8 @@ public class Hardware {
         touchSensorBottom = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_BOTTOM);
         touchSensorTop = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_TOP);
         colorSensor = getHardwareDevice(LynxI2cColorRangeSensor.class, COLOR_SENSOR);
+        tiltGyro = getHardwareDevice(ModernRoboticsI2cGyro.class, TILT_GYRO);
+        rangeSensor = getHardwareDevice(ModernRoboticsI2cRangeSensor.class, RANGE_SENSOR);
 
         imu = getHardwareDevice(BNO055IMU.class, IMU);
         if (imu != null) {
@@ -386,31 +394,37 @@ public class Hardware {
         }
 
         double turnPower;
-        if (Math.abs(heading - finalHeading) > 120) {
+        double difference = Math.abs(heading - finalHeading);
+        if (difference > 180){
+            difference = Math.abs(difference - 360);
+        }
+        if  (difference> 120) {
             turnPower = 1;
-        } else if (Math.abs(heading - finalHeading) > 90) {
+        } else if (difference > 90) {
             turnPower = 1;
-        } else if (Math.abs(heading - finalHeading) > 40) {
+        } else if (difference > 40) {
             turnPower = .8;
-        } else if (Math.abs(heading - finalHeading) > 30) {
+        } else if (difference > 30) {
             turnPower = .7;
-        } else if (Math.abs(heading - finalHeading) > 25) {
+        } else if (difference > 25) {
             turnPower = .6;
-        } else if (Math.abs(heading - finalHeading) > 20) {
-            turnPower = .6;
-
-        } else if (Math.abs(heading - finalHeading) > 15) {
+        } else if (difference > 20) {
             turnPower = .5;
 
-        } else if (Math.abs(heading - finalHeading) > 10) {
+        } else if (difference > 15) {
             turnPower = .4;
-        } else if (Math.abs(heading - finalHeading) > 5) {
+
+        } else if (difference > 10) {
             turnPower = .3;
-        } else {
+        } else if (difference > 5) {
+            turnPower = .2;
+        } else if (difference > 3) {
             turnPower = .1;
+        } else {
+            turnPower = .05;
         }
 
-        if (Math.abs(heading - finalHeading) < 1.5
+        if (Math.abs(heading - finalHeading) < 1
                 ) {
             return 0;
         }
@@ -690,6 +704,16 @@ public class Hardware {
         double result = Math.pow(n, power);
         if (result > 0 && n < 0)
             result = -result;
+        return result;
+    }
+    private double tiltGyroOffset = 0;
+    void setTiltGyroOffset(){
+        tiltGyroOffset = tiltGyro.getHeading();
+    }
+    double getTiltGyroAngle(){
+        double result = tiltGyro.getHeading() - tiltGyroOffset;
+        result += 360;
+        result %= 360;
         return result;
     }
 
