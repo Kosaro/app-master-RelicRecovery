@@ -3,14 +3,15 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 /**
- * Created by okosa on 9/29/2017.
+ * Created by okosa on 12/9/2017.
  */
+
 //@Disabled
-@Autonomous(name = "Blue Autonomous Other Balancing Board", group = "Blue")
-public class BlueAutonomousOtherBalancingBoard extends RelicRecoveryAutonomous {
+@Autonomous(name = "Ranking Points Red Other Balancing Board", group = "Red")
+public class RankingPointsRedAutoOtherBalancingBoard extends RelicRecoveryAutonomous {
     @Override
     Hardware.ColorDetected getDesiredColor() {
-        return Hardware.ColorDetected.BLUE;
+        return Hardware.ColorDetected.RED;
     }
 
     @Override
@@ -20,6 +21,6 @@ public class BlueAutonomousOtherBalancingBoard extends RelicRecoveryAutonomous {
 
     @Override
     boolean goForRankingPoints() {
-        return false;
+        return true;
     }
 }

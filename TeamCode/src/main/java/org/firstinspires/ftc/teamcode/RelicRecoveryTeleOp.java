@@ -43,6 +43,7 @@ public class RelicRecoveryTeleOp extends OpMode {
         telemetry.addData("Lift Motor", robot.liftMotor.getCurrentPosition());
         robot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.setCollectorPower(gamepad1.right_trigger - gamepad1.left_trigger);
+
         driveDirection();
         /*(
         if (gamepad1.right_bumper) {

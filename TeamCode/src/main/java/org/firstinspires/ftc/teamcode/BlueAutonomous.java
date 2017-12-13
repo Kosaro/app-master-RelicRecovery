@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Created by okosa on 9/29/2017.
  */
 //@Disabled
-@Autonomous(name = "Blue Autonomous")
+@Autonomous(name = "Blue Autonomous", group = "Blue")
 public class BlueAutonomous extends RelicRecoveryAutonomous{
     @Override
     Hardware.ColorDetected getDesiredColor() {
@@ -17,6 +17,11 @@ public class BlueAutonomous extends RelicRecoveryAutonomous{
 
     @Override
     boolean otherBalancingBoard() {
+        return false;
+    }
+
+    @Override
+    boolean goForRankingPoints() {
         return false;
     }
 }

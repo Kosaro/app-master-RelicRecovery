@@ -44,7 +44,20 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         robot.relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
         robot.setGrabbersClosed(true);
 
-        telemetry.addData("Status", "Calibrating Gyro and Initialize Vuforia");
+        telemetry.addData("Status", "Resetting lift");
+        telemetry.update();
+        calibrateGyroAndInitializeVuforia();
+        boolean neededToResetLift = !robot.touchSensorBottom.getState();
+        while (!robot.touchSensorBottom.getState()){
+            robot.setTiltServoPositionUp(true);
+            robot.setLiftPower(-1);
+        }
+        if (neededToResetLift){
+            robot.setTiltServoPositionUp(false);
+            sleep(2000);
+        }
+
+        telemetry.addData("Status", "Calibrating Gyro and Initializing Vuforia");
         telemetry.update();
         calibrateGyroAndInitializeVuforia();
 
@@ -130,8 +143,18 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         robot.jewelServo.setPosition(robot.JEWEL_SERVO_DOWN);
         sleep(1000);
         decodePictograph();
+        Hardware.ColorDetected desiredColor;
+        if (goForRankingPoints()) {
+            if (getDesiredColor() == Hardware.ColorDetected.BLUE)
+                desiredColor = Hardware.ColorDetected.RED;
+            else
+                desiredColor = Hardware.ColorDetected.BLUE;
+
+        } else {
+            desiredColor = getDesiredColor();
+        }
         if (getDesiredColor() == Hardware.ColorDetected.RED) {
-            if (robot.getColorDetected() == getDesiredColor()) {
+            if (robot.getColorDetected() == desiredColor) {
                 driveFor(-100, .3);
                 robot.jewelServo.setPosition(robot.JEWEL_SERVO_UP);
                 driveFor(200, .3);
@@ -141,7 +164,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                 driveFor(100, .3);// do nothing OR random!!!!! rawr xD lolzor;
             }
         } else {
-            if (robot.getColorDetected() == getDesiredColor()) {
+            if (robot.getColorDetected() == desiredColor) {
                 driveFor(-100, .3);
 
             } else if (robot.getColorDetected() != Hardware.ColorDetected.NONE) {
@@ -265,8 +288,8 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             alignmentAngle = -90;
         } else {
             if (getDesiredColor() == Hardware.ColorDetected.BLUE)
-            alignmentAngle = 0;
-            else{
+                alignmentAngle = 0;
+            else {
                 alignmentAngle = 179.99;
             }
         }
@@ -302,8 +325,16 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         driveFor(-250, .2, 2);
         if (cryptoboxKey != RelicRecoveryVuMark.LEFT)
             driveFor(50, .5, 2);
-        else
-            driveFor(25, .5, 2);
+        else {
+            driveFor(38, .5, 2);
+            while ((robot.getAngle() < alignmentAngle - 2 || robot.getAngle() > alignmentAngle + 0) && opModeIsActive()) {
+                robot.drive(0, 0, robot.turn(alignmentAngle - 1));
+                telemetry.addData("Angle", robot.getAngle());
+                telemetry.update();
+                idle();
+            }
+            robot.drive(0, 0, 0);
+        }
         /** //drive sideways
          startingValue = robot.rightFrontMotor.getCurrentPosition();
          startTime = getRuntime();
@@ -490,5 +521,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     abstract Hardware.ColorDetected getDesiredColor();
 
     abstract boolean otherBalancingBoard();
+
+    abstract boolean goForRankingPoints();
 
 }
