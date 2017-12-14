@@ -56,7 +56,9 @@ public class Hardware {
     private static final String RELIC_GRAB_SERVO = "rgs";
     private static final String RELIC_TILT_SERVO = "rts";
     private static final String RELIC_ARM_TILT_SERVO = "rats";
-    private static final String RELIC_ARM_EXTEND_SERVO = "raes";
+    //private static final String RELIC_ARM_EXTEND_SERVO = "raes";
+    private static final String RELIC_ARM_EXTEND_MOTOR = "raem";
+
 
 
     private static final String COLOR_SENSOR = "cs";
@@ -74,6 +76,7 @@ public class Hardware {
     private static final DcMotor.Direction LEFT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    private static final DcMotor.Direction RELIC_ARM_EXTEND_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
@@ -98,8 +101,8 @@ public class Hardware {
     double relicArmTiltSpeed = .093; //change in position per second
     public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.661111111;
     public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222;
-    public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .271;
-    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706;
+    /*public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .271;
+    public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
     public double relicArmExtendServoValue = .5;
     public static final double TILT_SERVO_UP = .521;
@@ -119,6 +122,7 @@ public class Hardware {
     DcMotor rightRearMotor;
     DcMotor leftCollectorMotor;
     DcMotor rightCollectorMotor;
+    DcMotor relicArmExtendMotor;
     DcMotor liftMotor;
     Servo jewelServo;
     Servo tiltServo;
@@ -128,7 +132,7 @@ public class Hardware {
     Servo relicGrabServo;
     Servo relicTiltServo;
     Servo relicArmTiltServo;
-    Servo relicArmExtendServo;
+    //Servo relicArmExtendServo;
     BNO055IMU imu;
     OpticalDistanceSensor lightSensor;
     DigitalChannel touchSensorTop;
@@ -235,6 +239,8 @@ public class Hardware {
         rightFrontMotor = getHardwareDevice(DcMotor.class, RIGHT_FRONT_MOTOR);
         rightCollectorMotor = getHardwareDevice(DcMotor.class, RIGHT_COLLECTOR_MOTOR);
         leftCollectorMotor = getHardwareDevice(DcMotor.class, LEFT_COLLECTOR_MOTOR);
+        relicArmExtendMotor = getHardwareDevice(DcMotor.class, RELIC_ARM_EXTEND_MOTOR);
+
         liftMotor = getHardwareDevice(DcMotor.class, LIFT_MOTOR);
         jewelServo = getHardwareDevice(Servo.class, JEWEL_SERVO);
         tiltServo = getHardwareDevice(Servo.class, TILT_SERVO);
@@ -244,7 +250,7 @@ public class Hardware {
         relicGrabServo = getHardwareDevice(Servo.class, RELIC_GRAB_SERVO);
         relicTiltServo = getHardwareDevice(Servo.class, RELIC_TILT_SERVO);
         relicArmTiltServo = getHardwareDevice(Servo.class, RELIC_ARM_TILT_SERVO);
-        relicArmExtendServo = getHardwareDevice(Servo.class, RELIC_ARM_EXTEND_SERVO);
+        //relicArmExtendServo = getHardwareDevice(Servo.class, RELIC_ARM_EXTEND_SERVO);
         touchSensorBottom = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_BOTTOM);
         touchSensorTop = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_TOP);
         colorSensor = getHardwareDevice(LynxI2cColorRangeSensor.class, COLOR_SENSOR);
@@ -292,6 +298,10 @@ public class Hardware {
             liftMotor.setDirection(LIFT_MOTOR_DIRECTION);
             liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
+        if (relicArmExtendMotor != null) {
+            relicArmExtendMotor.setDirection(RELIC_ARM_EXTEND_MOTOR_DIRECTION);
+            relicArmExtendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
 
         if (tiltServo != null)
             tiltServo.setPosition(TILT_SERVO_DOWN);
@@ -301,8 +311,8 @@ public class Hardware {
             grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
         if (grabTopServo != null)
             grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
-        if (relicArmExtendServo != null)
-            relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
+        /*if (relicArmExtendServo != null)
+            relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);*/
         if (jewelServo != null)
             jewelServo.setPosition(JEWEL_SERVO_UP);
     }
@@ -543,7 +553,7 @@ public class Hardware {
     Double previousRelicArmExtendTime = null;
     Double relicArmServoExtendPosition = null;
 
-    void incrementRelicArmExtendPosition(double x, double gameTime) {
+   /* void incrementRelicArmExtendPosition(double x, double gameTime) {
         if (previousRelicArmExtendTime == null || relicArmServoExtendPosition == null) {
             previousRelicArmExtendTime = gameTime;
             relicArmServoExtendPosition = relicArmExtendServo.getPosition();
@@ -557,7 +567,7 @@ public class Hardware {
             previousRelicArmExtendTime = gameTime;
             relicArmExtendServo.setPosition(relicArmServoExtendPosition);
         }
-    }
+    }*/
 
     void updateRelicTiltServoPosition() {
         double position;
@@ -661,6 +671,13 @@ public class Hardware {
             liftMotor.setPower(0);
         else
             liftMotor.setPower(power);
+    }
+
+    void setRelicArmExtendMotorPower(double power) {
+        if (relicArmServoTiltPosition == RELIC_ARM_TILT_SERVO_LOWER_LIMIT){
+            relicArmExtendMotor.setPower(0); }
+        else {
+        relicArmExtendMotor.setPower(power/2); }
     }
 
     void updatePossibleCiphers() {

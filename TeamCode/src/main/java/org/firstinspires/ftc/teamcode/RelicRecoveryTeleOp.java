@@ -83,7 +83,7 @@ public class RelicRecoveryTeleOp extends OpMode {
                 robot.relicGrabServo.setPosition(Hardware.RELIC_GRAB_SERVO_RELEASE);
             }
             if (getRuntime() - .1 > timeLastincremented) {
-                robot.incrementRelicArmExtendPosition(gamepad2.right_stick_y, getRuntime());
+                robot.setRelicArmExtendMotorPower(gamepad2.right_stick_y);
                 robot.incrementRelicArmTiltPosition(gamepad2.left_stick_y, getRuntime());
                 timeLastincremented = getRuntime();
 

@@ -20,7 +20,7 @@ Hardware robot;
     @Override
     public void start() {
         super.start();
-        robot.relicArmExtendServo.setPosition(Hardware.RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
+        //robot.relicArmExtendServo.setPosition(Hardware.RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);
     }
 
     @Override
