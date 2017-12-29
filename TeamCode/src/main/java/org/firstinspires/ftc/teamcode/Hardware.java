@@ -75,16 +75,16 @@ public class Hardware {
     private static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction LEFT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     private static final DcMotor.Direction RELIC_ARM_EXTEND_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
 
-    public static final double GRAB_BOTTOM_SERVO_GRAB = .5438888888888888; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = .352222222222222222;
-    public static final double GRAB_TOP_SERVO_GRAB = .61;
-    public static final double GRAB_TOP_SERVO_RELEASE = 0.81;
+    public static final double GRAB_BOTTOM_SERVO_GRAB = .550; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = .369; //new
+    public static final double GRAB_TOP_SERVO_GRAB = .645; //new
+    public static final double GRAB_TOP_SERVO_RELEASE = 0.799; //new
     public static final double FLIP_SERVO_UP = .05555;
     public static final double FLIP_SERVO_DOWN = .98;
     public static final double RELIC_GRAB_SERVO_RELEASE = .33 ;
@@ -105,8 +105,8 @@ public class Hardware {
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = .521;
-    public static final double TILT_SERVO_DOWN = 0.626;
+    public static final double TILT_SERVO_UP = .516; //new
+    public static final double TILT_SERVO_DOWN = 0.617; //new
     public static final double JEWEL_SERVO_DOWN = .74;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;
