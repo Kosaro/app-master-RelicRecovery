@@ -100,7 +100,7 @@ public class Hardware {
     public double relicArmTiltServoValue = .5;
     double relicArmTiltSpeed = .093; //change in position per second
     public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.661111111;
-    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222;
+    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222; 
     /*public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .271;
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
