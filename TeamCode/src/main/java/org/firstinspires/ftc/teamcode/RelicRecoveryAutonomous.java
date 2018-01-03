@@ -44,9 +44,10 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         robot.relicArmTiltServo.setPosition(RELIC_ARM_TILT_SERVO_LOWER_LIMIT);
         robot.setGrabbersClosed(true);
 
-        telemetry.addData("Status", "Resetting lift");
-        telemetry.update();
-        calibrateGyroAndInitializeVuforia();
+        //telemetry.addData("Status", "Resetting lift");
+        //telemetry.update();
+        //calibrateGyroAndInitializeVuforia();
+        /**
         boolean neededToResetLift = !robot.touchSensorBottom.getState();
         while (!robot.touchSensorBottom.getState()){
             robot.setTiltServoPositionUp(true);
@@ -57,6 +58,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             sleep(2000);
         }
 
+         */
         telemetry.addData("Status", "Calibrating Gyro and Initializing Vuforia");
         telemetry.update();
         calibrateGyroAndInitializeVuforia();

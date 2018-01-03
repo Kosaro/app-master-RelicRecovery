@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import static org.firstinspires.ftc.teamcode.Hardware.GRAB_BOTTOM_SERVO_RELEASE;
+import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_GRAB;
+import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_RELEASE;
+
 /**
  * Created by okosa on 9/9/2017.
  */
@@ -36,11 +40,14 @@ public class RelicRecoveryTeleOp extends OpMode {
         } else {
             robot.speedMultiplier = 1;
         }
+        /**
         telemetry.addData("Left Front Motor", robot.leftFrontMotor.getCurrentPosition());
         telemetry.addData("Right Front Motor", robot.rightFrontMotor.getCurrentPosition());
         telemetry.addData("Left Rear Motor", robot.leftRearMotor.getCurrentPosition());
         telemetry.addData("Right Rear Motor", robot.rightRearMotor.getCurrentPosition());
         telemetry.addData("Lift Motor", robot.liftMotor.getCurrentPosition());
+         */
+        telemetry.addData("Tilt Relic Arm Position", robot.relicArmTiltServo.getPosition());
         robot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.setCollectorPower(gamepad1.right_trigger - gamepad1.left_trigger);
 
@@ -83,13 +90,14 @@ public class RelicRecoveryTeleOp extends OpMode {
                 robot.relicGrabServo.setPosition(Hardware.RELIC_GRAB_SERVO_RELEASE);
             }
             if (getRuntime() - .1 > timeLastincremented) {
-                robot.setRelicArmExtendMotorPower(gamepad2.right_stick_y);
+                robot.setRelicArmExtendMotorPower(-gamepad2.right_stick_y);
                 robot.incrementRelicArmTiltPosition(gamepad2.left_stick_y, getRuntime());
                 timeLastincremented = getRuntime();
-
-
             }
             robot.updateRelicTiltServoPosition();
+            if (gamepad2.left_stick_button){
+                robot.relicArmServoTiltPosition = .864;
+            }
 
         }
     }
@@ -107,6 +115,9 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.setGrabbersClosed(true);
         } else if (gamepad2.b) {
             robot.setGrabbersClosed(false);
+        } else if (gamepad2.x){
+            robot.grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
+            robot.grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
         }
     }
 

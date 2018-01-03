@@ -76,7 +76,7 @@ public class Hardware {
     private static final DcMotor.Direction LEFT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    private static final DcMotor.Direction RELIC_ARM_EXTEND_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    private static final DcMotor.Direction RELIC_ARM_EXTEND_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
 
@@ -87,7 +87,7 @@ public class Hardware {
     public static final double GRAB_TOP_SERVO_RELEASE = 0.799; //new
     public static final double FLIP_SERVO_UP = .05555;
     public static final double FLIP_SERVO_DOWN = .98;
-    public static final double RELIC_GRAB_SERVO_RELEASE = .33 ;
+    public static final double RELIC_GRAB_SERVO_RELEASE = .33;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
     public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
     public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
@@ -100,7 +100,7 @@ public class Hardware {
     public double relicArmTiltServoValue = .5;
     double relicArmTiltSpeed = .093; //change in position per second
     public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.661111111;
-    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222; 
+    public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222;
     /*public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .271;
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
@@ -405,10 +405,10 @@ public class Hardware {
 
         double turnPower;
         double difference = Math.abs(heading - finalHeading);
-        if (difference > 180){
+        if (difference > 180) {
             difference = Math.abs(difference - 360);
         }
-        if  (difference> 120) {
+        if (difference > 120) {
             turnPower = 1;
         } else if (difference > 90) {
             turnPower = 1;
@@ -674,10 +674,14 @@ public class Hardware {
     }
 
     void setRelicArmExtendMotorPower(double power) {
-        if (relicArmServoTiltPosition == RELIC_ARM_TILT_SERVO_LOWER_LIMIT){
-            relicArmExtendMotor.setPower(0); }
-        else {
-        relicArmExtendMotor.setPower(power/2); }
+        double powerE = power;
+        if (power < 0 && relicArmExtendMotor.getCurrentPosition()  < 40){
+            powerE = 0;
+        }else if (power > 0 && relicArmExtendMotor.getCurrentPosition()  > 800){
+            powerE = 0;
+        }
+        relicArmExtendMotor.setPower(powerE);
+
     }
 
     void updatePossibleCiphers() {
@@ -723,12 +727,20 @@ public class Hardware {
             result = -result;
         return result;
     }
+
     private double tiltGyroOffset = 0;
-    void setTiltGyroOffset(){
+
+    void setTiltGyroOffset() {
         tiltGyroOffset = tiltGyro.getHeading();
     }
-    double getTiltGyroAngle(){
-        double result = tiltGyro.getHeading() - tiltGyroOffset;
+
+    double getTiltGyroAngle() {
+        double result;
+        if (tiltGyro != null)
+            result = tiltGyro.getHeading() - tiltGyroOffset;
+        else
+            result = 0;
+
         result += 360;
         result %= 360;
         return result;
