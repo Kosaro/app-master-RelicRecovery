@@ -89,6 +89,7 @@ public class Hardware {
     public static final double FLIP_SERVO_DOWN = .98;
     public static final double RELIC_GRAB_SERVO_RELEASE = .33;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
+    public static final double RELIC_GRAB_SERVO_FULL_CLOSE = .602;
     public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
     public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
     public double relicTiltServoValue = .5;
@@ -106,7 +107,7 @@ public class Hardware {
     double relicArmExtendSpeed = .07272727; //change in position per second
     public double relicArmExtendServoValue = .5;
     public static final double TILT_SERVO_UP = .516; //new
-    public static final double TILT_SERVO_DOWN = 0.617; //new
+    public static final double TILT_SERVO_DOWN = 0.62; //old value: 0.617;
     public static final double JEWEL_SERVO_DOWN = .74;
     public static final double JEWEL_SERVO_UP = .204;
     private static final double GREY_VALUE = 4;

@@ -15,6 +15,9 @@ import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_RELEASE;
 public class RelicRecoveryTeleOp extends OpMode {
     Hardware robot;
     boolean relicMode = false;
+    boolean retractLift = false;
+    double waitTime;
+    Boolean isFlipping;
 
     @Override
     public void init() {
@@ -41,11 +44,11 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.speedMultiplier = 1;
         }
         /**
-        telemetry.addData("Left Front Motor", robot.leftFrontMotor.getCurrentPosition());
-        telemetry.addData("Right Front Motor", robot.rightFrontMotor.getCurrentPosition());
-        telemetry.addData("Left Rear Motor", robot.leftRearMotor.getCurrentPosition());
-        telemetry.addData("Right Rear Motor", robot.rightRearMotor.getCurrentPosition());
-        telemetry.addData("Lift Motor", robot.liftMotor.getCurrentPosition());
+         telemetry.addData("Left Front Motor", robot.leftFrontMotor.getCurrentPosition());
+         telemetry.addData("Right Front Motor", robot.rightFrontMotor.getCurrentPosition());
+         telemetry.addData("Left Rear Motor", robot.leftRearMotor.getCurrentPosition());
+         telemetry.addData("Right Rear Motor", robot.rightRearMotor.getCurrentPosition());
+         telemetry.addData("Lift Motor", robot.liftMotor.getCurrentPosition());
          */
         telemetry.addData("Tilt Relic Arm Position", robot.relicArmTiltServo.getPosition());
         robot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
@@ -95,8 +98,40 @@ public class RelicRecoveryTeleOp extends OpMode {
                 timeLastincremented = getRuntime();
             }
             robot.updateRelicTiltServoPosition();
-            if (gamepad2.left_stick_button){
+            if (gamepad2.left_stick_button) {
                 robot.relicArmServoTiltPosition = .864;
+            }
+            if (gamepad2.a && gamepad2.b && gamepad2.y && gamepad2.x) {
+                retractLift = true;
+            }
+            if (retractLift) {
+                robot.setTiltServoPositionUp(false);
+                if (isFlipping == null && robot.flipServoIsUp) {
+                    isFlipping = false;
+                } else if(isFlipping == null && !robot.flipServoIsUp){
+                    isFlipping = true;
+                    waitTime = getRuntime();
+                }
+                robot.setFlipServoUp(true);
+                if (isFlipping) {
+                    if (getRuntime() < waitTime + .5) {
+                        robot.setLiftPower(1);
+
+                    } else if (getRuntime() < waitTime + 1.5) {
+                        robot.setLiftPower(0);
+                    } else {
+                        isFlipping = false;
+                    }
+                } else {
+                    robot.setLiftPower(-1);
+                }
+                if (!robot.touchSensorBottom.getState()) {
+                    retractLift = false;
+                    isFlipping = null;
+                    robot.isRelicTiltParallelToGround = false;
+                    robot.relicGrabServo.setPosition(Hardware.RELIC_GRAB_SERVO_RELEASE);
+                    robot.setTiltServoPositionUp(false);
+                }
             }
 
         }
@@ -115,7 +150,7 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.setGrabbersClosed(true);
         } else if (gamepad2.b) {
             robot.setGrabbersClosed(false);
-        } else if (gamepad2.x){
+        } else if (gamepad2.dpad_left) {
             robot.grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
             robot.grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
         }
