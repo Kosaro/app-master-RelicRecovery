@@ -5,11 +5,12 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxI2cColorRangeSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -20,9 +21,7 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
@@ -56,18 +55,18 @@ public class Hardware {
     private static final String RELIC_GRAB_SERVO = "rgs";
     private static final String RELIC_TILT_SERVO = "rts";
     private static final String RELIC_ARM_TILT_SERVO = "rats";
-    //private static final String RELIC_ARM_EXTEND_SERVO = "raes";
+    private static final String ALIGNMENT_SERVO = "as";
     private static final String RELIC_ARM_EXTEND_MOTOR = "raem";
-
+    private static final String POTENTIOMETER = "p";
 
 
     private static final String COLOR_SENSOR = "cs";
-    private static final String LIGHT_SENSOR = "ls";
     final static String IMU = "imu";
     private static final String TOUCH_SENSOR_TOP = "tst";
     private static final String TOUCH_SENSOR_BOTTOM = "tsb";
     private static final String TILT_GYRO = "tg";
     private static final String RANGE_SENSOR = "rs"; //port 2
+    private static final String DISTANCE_SENSOR = "ds";
 
     private static final DcMotor.Direction LEFT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     private static final DcMotor.Direction RIGHT_FRONT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
@@ -108,12 +107,16 @@ public class Hardware {
     public double relicArmExtendServoValue = .5;
     public static final double TILT_SERVO_UP = .516; //new
     public static final double TILT_SERVO_DOWN = 0.62; //old value: 0.617;
-    public static final double JEWEL_SERVO_DOWN = .74;
+    public static final double JEWEL_SERVO_DOWN = .785;
     public static final double JEWEL_SERVO_UP = .204;
+    public static final double ALIGNMENT_SERVO_DOWN = .364;
+    public static final double ALIGNMENT_SERVO_UP = .857;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
     private static final double RED_THRESHOLD = 10;
     private static final double BLUE_THRESHOLD = 10;
+    private static final double POTENTIOMETER_0_DEGREE_VALUE = 0;
+    private static final double POTENTIOMETER_90_DEGREE_VALUE = 0;
 
 
     //Hardware Devices
@@ -133,6 +136,7 @@ public class Hardware {
     Servo relicGrabServo;
     Servo relicTiltServo;
     Servo relicArmTiltServo;
+    Servo alignmentServo;
     //Servo relicArmExtendServo;
     BNO055IMU imu;
     OpticalDistanceSensor lightSensor;
@@ -141,6 +145,8 @@ public class Hardware {
     LynxI2cColorRangeSensor colorSensor;
     ModernRoboticsI2cGyro tiltGyro;
     ModernRoboticsI2cRangeSensor rangeSensor;
+    DistanceSensor distanceSensor;
+    AnalogInput potentiometer;
 
     //Local Variables
     private HardwareMap hardwareMap;
@@ -148,7 +154,7 @@ public class Hardware {
     private VuforiaTrackable relicTemplate;
     ArrayList<Integer> possibleCiphers;
 
-    public boolean robotOrientationForward;
+    public boolean robotOrientationSideways;
     public boolean glyphsFlippedUp;
     public double speedMultiplier = 1;
     boolean isRelicTiltParallelToGround = false;
@@ -251,12 +257,14 @@ public class Hardware {
         relicGrabServo = getHardwareDevice(Servo.class, RELIC_GRAB_SERVO);
         relicTiltServo = getHardwareDevice(Servo.class, RELIC_TILT_SERVO);
         relicArmTiltServo = getHardwareDevice(Servo.class, RELIC_ARM_TILT_SERVO);
-        //relicArmExtendServo = getHardwareDevice(Servo.class, RELIC_ARM_EXTEND_SERVO);
+        alignmentServo = getHardwareDevice(Servo.class, ALIGNMENT_SERVO);
         touchSensorBottom = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_BOTTOM);
         touchSensorTop = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_TOP);
         colorSensor = getHardwareDevice(LynxI2cColorRangeSensor.class, COLOR_SENSOR);
         tiltGyro = getHardwareDevice(ModernRoboticsI2cGyro.class, TILT_GYRO);
         rangeSensor = getHardwareDevice(ModernRoboticsI2cRangeSensor.class, RANGE_SENSOR);
+        distanceSensor = getHardwareDevice(DistanceSensor.class, DISTANCE_SENSOR);
+        potentiometer = getHardwareDevice(AnalogInput.class, POTENTIOMETER);
 
         imu = getHardwareDevice(BNO055IMU.class, IMU);
         if (imu != null) {
@@ -303,7 +311,9 @@ public class Hardware {
             relicArmExtendMotor.setDirection(RELIC_ARM_EXTEND_MOTOR_DIRECTION);
             relicArmExtendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
+    }
 
+    public void initializeServos(){
         if (tiltServo != null)
             tiltServo.setPosition(TILT_SERVO_DOWN);
         if (flipServo != null)
@@ -316,6 +326,9 @@ public class Hardware {
             relicArmExtendServo.setPosition(RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT);*/
         if (jewelServo != null)
             jewelServo.setPosition(JEWEL_SERVO_UP);
+        if (alignmentServo != null) {
+            alignmentServo.setPosition(ALIGNMENT_SERVO_UP);
+        }
     }
 
 
@@ -333,9 +346,10 @@ public class Hardware {
         double rightFrontPower;
         double rightRearPower;
 
-        if (robotOrientationForward == false) {
-            forwardValue = -forwardValue;
-            sideValue = -sideValue;
+        if (robotOrientationSideways == true) {
+            double tempForwardValue = forwardValue;
+            forwardValue = -sideValue;
+            sideValue = tempForwardValue;
         }
 
         //forwardValue = powWithoutLosingNegative(forwardValue, 1.65);
@@ -373,11 +387,11 @@ public class Hardware {
         rightRearMotor.setPower(rightRearPower);
     }
 
-    public void setGrabbersClosed(boolean closed){
-        if (closed){
+    public void setGrabbersClosed(boolean closed) {
+        if (closed) {
             grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_GRAB);
             grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
-        }else{
+        } else {
             grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
             grabTopServo.setPosition(GRAB_TOP_SERVO_RELEASE);
         }
@@ -431,6 +445,8 @@ public class Hardware {
             turnPower = .2;
         } else if (difference > 3) {
             turnPower = .1;
+        } else if (difference > 1.5) {
+            turnPower = .075;
         } else {
             turnPower = .05;
         }
@@ -477,13 +493,19 @@ public class Hardware {
                 .toAngleUnit(AngleUnit.DEGREES).firstAngle;
     }
 
-    Hardware(HardwareMap hardwareMap) {
+    Hardware(HardwareMap hardwareMap, boolean initializeServos) {
         this.hardwareMap = hardwareMap;
         initialize();
         //initializeImuParameters();
         possibleCiphers = new ArrayList<Integer>(Arrays.asList(0, 1, 2, 3, 4, 5));
-        robotOrientationForward = true;
+        robotOrientationSideways = false;
         glyphsFlippedUp = true;
+        if (initializeServos) {
+            initializeServos();
+        }
+    }
+    Hardware(HardwareMap hardwareMap) {
+        this(hardwareMap, true);
     }
 
     private <T> T getHardwareDevice(Class<? extends T> classOrInterface, String deviceName) {
@@ -674,11 +696,19 @@ public class Hardware {
             liftMotor.setPower(power);
     }
 
+    public void setAlignmentServoUp(boolean up) {
+        if (up) {
+            alignmentServo.setPosition(ALIGNMENT_SERVO_UP);
+        } else {
+            alignmentServo.setPosition(ALIGNMENT_SERVO_DOWN);
+        }
+    }
+
     void setRelicArmExtendMotorPower(double power) {
         double powerE = power;
-        if (power < 0 && relicArmExtendMotor.getCurrentPosition()  < 40){
+        if (power < 0 && relicArmExtendMotor.getCurrentPosition() < 40) {
             powerE = 0;
-        }else if (power > 0 && relicArmExtendMotor.getCurrentPosition()  > 800){
+        } else if (power > 0 && relicArmExtendMotor.getCurrentPosition() > 800) {
             powerE = 0;
         }
         relicArmExtendMotor.setPower(powerE);
@@ -745,6 +775,15 @@ public class Hardware {
         result += 360;
         result %= 360;
         return result;
+    }
+    double getPotentiometerAngle(){
+        double voltage;
+        if (potentiometer != null){
+            voltage = potentiometer.getVoltage();
+        }else {
+            return -1;
+        }
+        return Range.scale(voltage, POTENTIOMETER_0_DEGREE_VALUE, POTENTIOMETER_90_DEGREE_VALUE, 0, 90) ;
     }
 
     static boolean isApproximatelyEqual(double x, double y) {

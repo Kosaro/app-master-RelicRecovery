@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_BOTTOM_SERVO_RELEASE;
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_GRAB;
-import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_RELEASE;
 
 /**
  * Created by okosa on 9/9/2017.
@@ -28,7 +27,6 @@ public class RelicRecoveryTeleOp extends OpMode {
     @Override
     public void start() {
         super.start();
-        robot.relicArmTiltServo.setPosition(Hardware.RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE);
         robot.jewelServo.setPosition(Hardware.JEWEL_SERVO_UP);
     }
 
@@ -38,7 +36,7 @@ public class RelicRecoveryTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad1.left_bumper || gamepad1.right_bumper) {
+        if (gamepad1.right_bumper) {
             robot.speedMultiplier = .5;
         } else {
             robot.speedMultiplier = 1;
@@ -55,15 +53,6 @@ public class RelicRecoveryTeleOp extends OpMode {
         robot.setCollectorPower(gamepad1.right_trigger - gamepad1.left_trigger);
 
         driveDirection();
-        /*(
-        if (gamepad1.right_bumper) {
-            robot.leftCollectorMotor.setPower(1);
-            robot.rightCollectorMotor.setPower(-1);
-        } else if (gamepad1.left_bumper) {
-            robot.leftCollectorMotor.setPower(-1);
-            robot.rightCollectorMotor.setPower(1);
-        }
-        */
 
         if (gamepad2.back != previousSelectedValue) {
             if (gamepad2.back) {
@@ -103,6 +92,8 @@ public class RelicRecoveryTeleOp extends OpMode {
             }
             if (gamepad2.a && gamepad2.b && gamepad2.y && gamepad2.x) {
                 retractLift = true;
+                robot.isRelicTiltParallelToGround = false;
+                robot.relicGrabServo.setPosition(Hardware.RELIC_GRAB_SERVO_RELEASE);
             }
             if (retractLift) {
                 robot.setTiltServoPositionUp(false);
@@ -138,10 +129,10 @@ public class RelicRecoveryTeleOp extends OpMode {
     }
 
     public void driveDirection() {
-        if (gamepad1.dpad_up) {
-            robot.robotOrientationForward = true;
-        } else if (gamepad1.dpad_down) {
-            robot.robotOrientationForward = false;
+        if (gamepad1.left_bumper) {
+            robot.robotOrientationSideways = true;
+        } else {
+            robot.robotOrientationSideways = false;
         }
     }
 
@@ -171,6 +162,25 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.setTiltServoPositionUp(false);
         }
     }
+        public void driveWithGyro(double forwardValue, double sideValue, double rotationValue){
+        double directionRelativeToRobot;
+        if (forwardValue == 0) {
+            if (sideValue > 0)
+                directionRelativeToRobot = Math.PI / 2;
+            else
+                directionRelativeToRobot = -Math.PI / 2;
+        } else
+            directionRelativeToRobot = Math.atan(sideValue / forwardValue);
+        double velocity = Math.sqrt(Math.pow(forwardValue, 2) + Math.pow(sideValue, 2));
+        if (forwardValue < 0) {
+            directionRelativeToRobot += Math.PI;
+        }
+        double adjustedDirection = directionRelativeToRobot - robot.getAngle() * Math.PI / 180;
+        double forwardPower = velocity * Math.cos(adjustedDirection);
+        double sidePower = velocity * Math.sin(adjustedDirection);
+        robot.drive(forwardPower, sidePower, rotationValue);
+    }
+
 
 
 }
