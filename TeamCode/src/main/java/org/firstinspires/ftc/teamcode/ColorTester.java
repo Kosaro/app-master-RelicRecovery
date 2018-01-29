@@ -27,6 +27,10 @@ public class ColorTester extends OpMode {
     public void loop() {
         if (robot.distanceSensor != null)
             telemetry.addData("Distance", robot.distanceSensor.getDistance(DistanceUnit.CM));
+        if (robot.rangeSensor != null) {
+            telemetry.addData("Range", robot.rangeSensor.cmUltrasonic());
+            telemetry.addData("Range Adjusted", robot.getRange());
+        }
         telemetry.addData("Potentiometer Angle", robot.getPotentiometerAngle());
         if (robot.potentiometer != null) {
             telemetry.addData("Potentiometer Voltage", robot.potentiometer.getVoltage());

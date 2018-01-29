@@ -21,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
@@ -74,7 +75,7 @@ public class Hardware {
     private static final DcMotor.Direction RIGHT_REAR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction LEFT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RIGHT_COLLECTOR_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    private static final DcMotor.Direction LIFT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     private static final DcMotor.Direction RELIC_ARM_EXTEND_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     private static final String ACTIVE_CIPHER_FILE_NAME = "ActiveCipher";
@@ -109,14 +110,14 @@ public class Hardware {
     public static final double TILT_SERVO_DOWN = 0.62; //old value: 0.617;
     public static final double JEWEL_SERVO_DOWN = .785;
     public static final double JEWEL_SERVO_UP = .204;
-    public static final double ALIGNMENT_SERVO_DOWN = .364;
-    public static final double ALIGNMENT_SERVO_UP = .857;
+    public static final double ALIGNMENT_SERVO_DOWN = .717;
+    public static final double ALIGNMENT_SERVO_UP = .189;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
     private static final double RED_THRESHOLD = 10;
     private static final double BLUE_THRESHOLD = 10;
-    private static final double POTENTIOMETER_0_DEGREE_VALUE = 0;
-    private static final double POTENTIOMETER_90_DEGREE_VALUE = 0;
+    private static final double POTENTIOMETER_0_DEGREE_VALUE = .8;
+    private static final double POTENTIOMETER_90_DEGREE_VALUE = .118;
 
 
     //Hardware Devices
@@ -428,23 +429,23 @@ public class Hardware {
         } else if (difference > 90) {
             turnPower = 1;
         } else if (difference > 40) {
-            turnPower = .8;
-        } else if (difference > 30) {
-            turnPower = .7;
-        } else if (difference > 25) {
             turnPower = .6;
+        } else if (difference > 30) {
+            turnPower = .3;
+        } else if (difference > 25) {
+            turnPower = .3;
         } else if (difference > 20) {
-            turnPower = .5;
+            turnPower = .2;
 
         } else if (difference > 15) {
-            turnPower = .4;
+            turnPower = .2;
 
         } else if (difference > 10) {
-            turnPower = .3;
-        } else if (difference > 5) {
             turnPower = .2;
-        } else if (difference > 3) {
+        } else if (difference > 5) {
             turnPower = .1;
+        } else if (difference > 3) {
+            turnPower = .099;
         } else if (difference > 1.5) {
             turnPower = .075;
         } else {
@@ -702,6 +703,10 @@ public class Hardware {
         } else {
             alignmentServo.setPosition(ALIGNMENT_SERVO_DOWN);
         }
+    }
+
+    double getRange(){
+        return (13 + rangeSensor.cmUltrasonic()) * Math.cos(Math.toRadians(getPotentiometerAngle())) - 13;
     }
 
     void setRelicArmExtendMotorPower(double power) {

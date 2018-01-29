@@ -27,7 +27,7 @@ public class RangeSensorTest extends OpMode {
 
     @Override
     public void loop() {
-        telemetry.addData("Distance", robot.rangeSensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("Distance", robot.rangeSensor.cmUltrasonic());
         telemetry.addData("CM Optical", robot.rangeSensor.cmOptical()) ;
         telemetry.addData("CM Ultrasonic", robot.rangeSensor.cmUltrasonic());
     }
