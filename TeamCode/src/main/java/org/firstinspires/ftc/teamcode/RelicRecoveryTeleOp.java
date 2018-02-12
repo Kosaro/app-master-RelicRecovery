@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_BOTTOM_SERVO_RELEASE;
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_GRAB;
+import static org.firstinspires.ftc.teamcode.Hardware.RELIC_GRAB_SERVO_FULL_CLOSE;
 
 /**
  * Created by okosa on 9/9/2017.
@@ -22,6 +23,7 @@ public class RelicRecoveryTeleOp extends OpMode {
     public void init() {
         robot = new Hardware(hardwareMap);
         robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.relicGrabServo.setPosition(RELIC_GRAB_SERVO_FULL_CLOSE);
     }
 
     @Override
@@ -37,6 +39,8 @@ public class RelicRecoveryTeleOp extends OpMode {
     @Override
     public void loop() {
         if (gamepad1.right_bumper) {
+            robot.speedMultiplier = .25;
+        } else if (gamepad1.left_bumper) {
             robot.speedMultiplier = .5;
         } else {
             robot.speedMultiplier = 1;
@@ -65,6 +69,13 @@ public class RelicRecoveryTeleOp extends OpMode {
             flip();
             pickUp();
             tilt();
+
+            robot.relicGrabServo.setPosition(RELIC_GRAB_SERVO_FULL_CLOSE);
+            robot.updateRelicTiltServoPosition();
+            if (gamepad2.x) {
+                robot.relicArmServoTiltPosition = robot.RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE;
+                robot.incrementRelicArmTiltPosition(0, getRuntime());
+            }
             //telemetry.addData("Touch Bottom", robot.touchSensorBottom.getState());
             //telemetry.addData("Touch Top", robot.touchSensorTop.getState());
             //telemetry.addData("p", robot.flipServo.getPosition());
@@ -99,7 +110,7 @@ public class RelicRecoveryTeleOp extends OpMode {
                 robot.setTiltServoPositionUp(false);
                 if (isFlipping == null && robot.flipServoIsUp) {
                     isFlipping = false;
-                } else if(isFlipping == null && !robot.flipServoIsUp){
+                } else if (isFlipping == null && !robot.flipServoIsUp) {
                     isFlipping = true;
                     waitTime = getRuntime();
                 }
@@ -130,10 +141,11 @@ public class RelicRecoveryTeleOp extends OpMode {
 
     public void driveDirection() {
         if (gamepad1.left_bumper) {
-            robot.robotOrientationSideways = true;
+            //robot.robotOrientationSideways = true;
         } else {
-            robot.robotOrientationSideways = false;
+
         }
+        robot.robotOrientationSideways = false;
     }
 
     public void pickUp() {
@@ -162,7 +174,8 @@ public class RelicRecoveryTeleOp extends OpMode {
             robot.setTiltServoPositionUp(false);
         }
     }
-        public void driveWithGyro(double forwardValue, double sideValue, double rotationValue){
+
+    public void driveWithGyro(double forwardValue, double sideValue, double rotationValue) {
         double directionRelativeToRobot;
         if (forwardValue == 0) {
             if (sideValue > 0)
@@ -180,7 +193,6 @@ public class RelicRecoveryTeleOp extends OpMode {
         double sidePower = velocity * Math.sin(adjustedDirection);
         robot.drive(forwardPower, sidePower, rotationValue);
     }
-
 
 
 }

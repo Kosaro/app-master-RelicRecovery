@@ -6,7 +6,6 @@ import com.qualcomm.hardware.lynx.LynxI2cColorRangeSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -21,7 +20,6 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
@@ -83,10 +81,11 @@ public class Hardware {
 
     public static final double GRAB_BOTTOM_SERVO_GRAB = .550; //new
     public static final double GRAB_BOTTOM_SERVO_RELEASE = .369; //new
-    public static final double GRAB_TOP_SERVO_GRAB = .645; //new
-    public static final double GRAB_TOP_SERVO_RELEASE = 0.799; //new
-    public static final double FLIP_SERVO_UP = .05555;
-    public static final double FLIP_SERVO_DOWN = .98;
+    public static final double GRAB_TOP_SERVO_GRAB = .4; //new
+    public static final double GRAB_TOP_SERVO_RELEASE = .51; //new
+    public static final double FLIP_SERVO_UP_WHEN_DOWN = .039;
+    public static final double FLIP_SERVO_UP_WHEN_UP = .067;
+    public static final double FLIP_SERVO_DOWN = 1;
     public static final double RELIC_GRAB_SERVO_RELEASE = .33;
     public static final double RELIC_GRAB_SERVO_GRAB = .52;
     public static final double RELIC_GRAB_SERVO_FULL_CLOSE = .602;
@@ -106,12 +105,12 @@ public class Hardware {
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
     public double relicArmExtendServoValue = .5;
-    public static final double TILT_SERVO_UP = .516; //new
-    public static final double TILT_SERVO_DOWN = 0.62; //old value: 0.617;
+    public static final double TILT_SERVO_UP = .75;
+    public static final double TILT_SERVO_DOWN = 0.85;
     public static final double JEWEL_SERVO_DOWN = .785;
     public static final double JEWEL_SERVO_UP = .204;
     public static final double ALIGNMENT_SERVO_DOWN = .717;
-    public static final double ALIGNMENT_SERVO_UP = .189;
+    public static final double ALIGNMENT_SERVO_UP = .24;
     private static final double GREY_VALUE = 4;
     private static final double BROWN_VALUE = 2;
     private static final double RED_THRESHOLD = 10;
@@ -197,10 +196,10 @@ public class Hardware {
     boolean flipServoIsUp = true;
 
     public void setFlipServoUp(boolean flipUp) {
-        final double target;
+        Double target = null;
         if (isApproximatelyEqual(tiltServo.getPosition(), TILT_SERVO_UP) && touchSensorBottom.getState() == true) {
             if (flipUp) {
-                target = FLIP_SERVO_UP;
+                target = FLIP_SERVO_UP_WHEN_UP;
                 flipServoIsUp = true;
             } else {
                 target = FLIP_SERVO_DOWN;
@@ -228,16 +227,28 @@ public class Hardware {
             flipServo.setPosition(flipServo.getPosition() + incrementDistance);
             if (flipServo.getPosition() > FLIP_SERVO_DOWN)
             flipServo.setPosition(FLIP_SERVO_DOWN);
-            if (flipServo.getPosition() < FLIP_SERVO_UP)
-            flipServo.setPosition(FLIP_SERVO_UP);
+            if (flipServo.getPosition() < FLIP_SERVO_UP_WHEN_DOWN)
+            flipServo.setPosition(FLIP_SERVO_UP_WHEN_DOWN);
             }
             flipServo.setPosition(target);
             }
             };
              slowFlip.start();
              */
-            flipServo.setPosition(target);
+
+
         }
+
+        if (flipUp && !isApproximatelyEqual(flipServo.getPosition(), FLIP_SERVO_DOWN)) {
+            if (isApproximatelyEqual(tiltServo.getPosition(), TILT_SERVO_DOWN))
+                target = FLIP_SERVO_UP_WHEN_DOWN;
+            else {
+                target = FLIP_SERVO_UP_WHEN_UP;
+            }
+        }
+
+        if (target != null)
+            flipServo.setPosition(target);
     }
 
     private void initialize() {
@@ -314,11 +325,11 @@ public class Hardware {
         }
     }
 
-    public void initializeServos(){
+    public void initializeServos() {
         if (tiltServo != null)
             tiltServo.setPosition(TILT_SERVO_DOWN);
         if (flipServo != null)
-            flipServo.setPosition(FLIP_SERVO_UP);
+            flipServo.setPosition(FLIP_SERVO_UP_WHEN_DOWN);
         if (grabBottomServo != null)
             grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
         if (grabTopServo != null)
@@ -505,6 +516,7 @@ public class Hardware {
             initializeServos();
         }
     }
+
     Hardware(HardwareMap hardwareMap) {
         this(hardwareMap, true);
     }
@@ -553,6 +565,11 @@ public class Hardware {
             } else if (flipServoIsUp) {
                 tiltServo.setPosition(TILT_SERVO_DOWN);
             }
+        }
+        if (flipServo.getPosition() > .5) {
+            setFlipServoUp(false);
+        } else {
+            setFlipServoUp(true);
         }
     }
 
@@ -705,13 +722,13 @@ public class Hardware {
         }
     }
 
-    double getRange(){
+    double getRange() {
         return (13 + rangeSensor.cmUltrasonic()) * Math.cos(Math.toRadians(getPotentiometerAngle())) - 13;
     }
 
     void setRelicArmExtendMotorPower(double power) {
         double powerE = power;
-        if (power < 0 && relicArmExtendMotor.getCurrentPosition() < 40) {
+        if (power < 0 && relicArmExtendMotor.getCurrentPosition() < 25) {
             powerE = 0;
         } else if (power > 0 && relicArmExtendMotor.getCurrentPosition() > 800) {
             powerE = 0;
@@ -781,14 +798,15 @@ public class Hardware {
         result %= 360;
         return result;
     }
-    double getPotentiometerAngle(){
+
+    double getPotentiometerAngle() {
         double voltage;
-        if (potentiometer != null){
+        if (potentiometer != null) {
             voltage = potentiometer.getVoltage();
-        }else {
+        } else {
             return -1;
         }
-        return Range.scale(voltage, POTENTIOMETER_0_DEGREE_VALUE, POTENTIOMETER_90_DEGREE_VALUE, 0, 90) ;
+        return Range.scale(voltage, POTENTIOMETER_0_DEGREE_VALUE, POTENTIOMETER_90_DEGREE_VALUE, 0, 90);
     }
 
     static boolean isApproximatelyEqual(double x, double y) {

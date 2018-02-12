@@ -189,7 +189,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         if (!otherBalancingBoard()) {
             if (getDesiredColor() == Hardware.ColorDetected.RED) {
                 if (cryptoboxKey == LEFT)
-                    driveFor(2400 * directionMultiplier, 1, 3, 0.0);
+                    driveFor(2330 * directionMultiplier, 1, 3, 0.0);
                 else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
                     driveFor(1810 * directionMultiplier, 1, 3, 0.0);
                 else
@@ -556,7 +556,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         }
 
 
-        driveForRearWheel(-900, 1, 3, alignmentAngle - 20);
+        driveForRearWheel(-900, 1, 3, alignmentAngle - 10);
         robot.setCollectorPower(0);
         startingValue = robot.rightFrontMotor.getCurrentPosition();
         startingValue2 = robot.rightRearMotor.getCurrentPosition();
