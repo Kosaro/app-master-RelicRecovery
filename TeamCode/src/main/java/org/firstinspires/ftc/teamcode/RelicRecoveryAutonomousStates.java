@@ -12,8 +12,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryV
 import static org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark.LEFT;
 import static org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark.RIGHT;
 import static org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark.UNKNOWN;
-import static org.firstinspires.ftc.teamcode.Hardware.ColorDetected.BLUE;
-import static org.firstinspires.ftc.teamcode.Hardware.ColorDetected.RED;
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_BOTTOM_SERVO_RELEASE;
 import static org.firstinspires.ftc.teamcode.Hardware.GRAB_TOP_SERVO_GRAB;
 import static org.firstinspires.ftc.teamcode.Hardware.RELIC_ARM_TILT_SERVO_LOWER_LIMIT;
@@ -23,7 +21,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.RELIC_ARM_TILT_SERVO_LOWER
  */
 @Disabled
 @Autonomous(name = "RelicRecoveryAutonomous")
-public abstract class RelicRecoveryAutonomous extends LinearOpMode {
+public abstract class RelicRecoveryAutonomousStates extends LinearOpMode {
 
     //Local Variables
     Hardware robot;
@@ -35,7 +33,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        if (getDesiredColor() == RED)
+        if (getDesiredColor() == Hardware.ColorDetected.RED)
             directionMultiplier = 1;
         else
             directionMultiplier = -1;
@@ -121,7 +119,6 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
         telemetry.addData("Status", "Collect Glyphs");
         telemetry.update();
-
         //collectGlyphs();
 
         telemetry.addData("Status", "Done");
@@ -155,14 +152,14 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         Hardware.ColorDetected desiredColor;
         if (goForRankingPoints()) {
             if (getDesiredColor() == Hardware.ColorDetected.BLUE)
-                desiredColor = RED;
+                desiredColor = Hardware.ColorDetected.RED;
             else
                 desiredColor = Hardware.ColorDetected.BLUE;
 
         } else {
             desiredColor = getDesiredColor();
         }
-        if (getDesiredColor() == RED) {
+        if (getDesiredColor() == Hardware.ColorDetected.RED) {
             if (robot.getColorDetected() == desiredColor) {
                 driveFor(-100, .3);
                 robot.jewelServo.setPosition(robot.JEWEL_SERVO_UP);
@@ -190,7 +187,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
     private void driveToCryptobox() {
         if (!otherBalancingBoard()) {
-            if (getDesiredColor() == RED) {
+            if (getDesiredColor() == Hardware.ColorDetected.RED) {
                 if (cryptoboxKey == LEFT)
                     driveFor(2330 * directionMultiplier, 1, 3, 0.0);
                 else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
@@ -206,19 +203,40 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                     driveFor(2000 * directionMultiplier, 1, 3, 0.0);
             }
         } else {
-            driveFor(1150 * directionMultiplier, 1, 5, 0.0);
-            if (getDesiredColor() == RED) {
-                if (cryptoboxKey == LEFT) {
-                    driveFor(1650, 0, -1, 5, 0.0);
-                } else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
-                    driveFor(-1100, 0, -1, 4, 0.0);
-                else {
-                    driveFor(-600, 0, -1, 3, 0.0);
-                }
+            driveFor(1250 * directionMultiplier, 1, 5, 0.0);
+            double angle;
+            if (getDesiredColor() == Hardware.ColorDetected.RED) {
+                angle = -90;
             } else {
-                alignmentAngle = 0;
+                angle = 90;
+            }
+            if (!(cryptoboxKey != RIGHT && getDesiredColor() == Hardware.ColorDetected.BLUE)) {
+                while ((robot.getAngle() < angle - 2 || robot.getAngle() > angle + 2) && opModeIsActive()) {
+                    robot.drive(0, 0, robot.turn(angle));
+                    telemetry.addData("Angle", robot.getAngle());
+                    telemetry.addData("CryptoKey", cryptoboxKey);
+                    telemetry.update();
+                    idle();
+                }
+                sleep(200);
+                while ((robot.getAngle() < angle - 2 || robot.getAngle() > angle + 2) && opModeIsActive()) {
+                    robot.drive(0, 0, robot.turn(angle));
+                    telemetry.addData("Angle", robot.getAngle());
+                    telemetry.addData("CryptoKey", cryptoboxKey);
+                    telemetry.update();
+                    idle();
+                }
+            }
+            if (getDesiredColor() == Hardware.ColorDetected.RED) {
                 if (cryptoboxKey == LEFT)
-                    driveFor(-50 * directionMultiplier, .5, 5, 0.0);
+                    driveFor(1000 * directionMultiplier, .5, 5, angle);
+                else if (cryptoboxKey == RelicRecoveryVuMark.CENTER)
+                    driveFor(470 * directionMultiplier, .5, 5, angle);
+                else
+                    driveFor(100 * directionMultiplier, .5, 5, angle);
+            } else {
+                if (cryptoboxKey == LEFT)
+                    driveFor(-50 * directionMultiplier, .5, 5, angle);
                 else if (cryptoboxKey == RelicRecoveryVuMark.CENTER) {
                     startingValue = robot.rightFrontMotor.getCurrentPosition();
                     startingValue2 = robot.rightRearMotor.getCurrentPosition();
@@ -235,14 +253,14 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                         } else {
                             direction = -1;
                         }
-                        robot.drive(0, direction * 1, rotationValue);
+                        robot.drive(0, direction * .3, rotationValue);
                         telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
                         telemetry.update();
                         idle();
                     }
                     robot.drive(0, 0, 0);
                 } else
-                    driveFor(-1000 * directionMultiplier, 0, -1, 5, 0.0);
+                    driveFor(900 * directionMultiplier, .5, 5, angle);
             }
         }
         robot.drive(0, 0, 0);
@@ -253,22 +271,24 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     private void turnToCryptobox() {
         if (!otherBalancingBoard()) {
             alignmentAngle = -90;
-        } else {
+        }
+        else
+        {
             if (getDesiredColor() == Hardware.ColorDetected.BLUE)
                 alignmentAngle = 0;
             else {
                 alignmentAngle = 179.99;
             }
         }
-        while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
+        while ((robot.getAngle() < alignmentAngle - 2 || robot.getAngle() > alignmentAngle + 2) && opModeIsActive()) {
             robot.drive(0, 0, robot.turn(alignmentAngle));
             telemetry.addData("Angle", robot.getAngle());
             telemetry.update();
             idle();
         }
         robot.setAlignmentServoUp(false);
-        sleep(100);
-        while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
+        sleep(200);
+        while ((robot.getAngle() < alignmentAngle - 2 || robot.getAngle() > alignmentAngle + 2) && opModeIsActive()) {
             robot.drive(0, 0, robot.turn(alignmentAngle));
             telemetry.addData("Angle", robot.getAngle());
             telemetry.update();
@@ -311,33 +331,33 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             }
             if (robot.getPotentiometerAngle() > 35) {
                 sideValue = .1;
-            } else if (robot.getPotentiometerAngle() > 30) {
+            } else if (robot.getPotentiometerAngle() > 25) {
                 sideValue = .1;
-            } else if (robot.getPotentiometerAngle() > 20) {
+            } else if (robot.getPotentiometerAngle() > 18) {
                 sideValue = .075;
-            } else if (robot.getPotentiometerAngle() > 15) {
+            } else if (robot.getPotentiometerAngle() > 12) {
                 sideValue = .052;
-            } else if (robot.getPotentiometerAngle() > 3 && robot.getPotentiometerAngle() < 4) {
+            } else if (robot.getPotentiometerAngle() > 3 && robot.getPotentiometerAngle() < 7) {
                 sideValue = -.052;
             } else if (robot.getPotentiometerAngle() > 1 && robot.getPotentiometerAngle() <= 3) {
                 sideValue = -.06;
-            } else if (robot.getPotentiometerAngle() <= 15 && robot.getPotentiometerAngle() >= 4) {
+            } else if (robot.getPotentiometerAngle() <= 12 && robot.getPotentiometerAngle() >= 7) {
                 sideValue = 0;
             }
             double forwardValue = 0;
-            if (robot.getRange() > 13) {
-                forwardValue = -.05;
-                if (robot.getRange() > 16)
+            if (robot.getRange() > 12.5) {
+                forwardValue = -.1;
+                if (robot.getRange() > 17)
                     forwardValue = -.15;
             } else if (robot.getRange() < 10) {
-                forwardValue = .03;
+                forwardValue = .05;
                 if (robot.getRange() < 8)
-                    forwardValue = .05;
+                    forwardValue = .065;
                 if (robot.getRange() < 5)
                     forwardValue = .1;
             }
             double turnValue = robot.turn(alignmentAngle);
-            if (robot.getRange() > 9 && robot.getRange() < 16 && (robot.getPotentiometerAngle() <= 15 && robot.getPotentiometerAngle() >= 4) && Math.abs(turnValue) <= .1) {
+            if (robot.getRange() > 9 && robot.getRange() < 14 && sideValue == 0 && Math.abs(turnValue) <= .1) {
                 canContinue = true;
                 robot.drive(0, 0, 0);
             } else {
@@ -369,7 +389,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         int numberOfAttempts = 0;
         boolean changedSideDirectionMultiplier = false;
 
-        //sleep(100);
+        sleep(500);
         robot.setTiltGyroOffset();
         int sideDirectionMultiplier;
         if (cryptoboxKey == LEFT) {
@@ -433,12 +453,12 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             alignWithColumn();
         }
         robot.setAlignmentServoUp(true);
-        if (getTimeLeft() > 15 && !secondGlyph) {
+        if (getTimeLeft() > 15 && !otherBalancingBoard() && !secondGlyph && cryptoboxKey != CENTER) {
             robot.setTiltServoPositionUp(true);
             robot.setGrabbersClosed(false);
             sleep(500);
             robot.setTiltServoPositionUp(false);
-            driveFor(150, .1, 2);
+            driveFor(100, .1, 2);
             collectGlyphs();
         } else if (getTimeLeft() > 4) {
             robot.setGrabbersClosed(false);
@@ -479,7 +499,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
     boolean attemptToLowerGlyph() {
         robot.setTiltServoPositionUp(true);
-        if (secondGlyph && ((cryptoboxKey == LEFT && getDesiredColor() == RED) || (cryptoboxKey != CENTER && getDesiredColor() == BLUE))) {
+        if (secondGlyph && cryptoboxKey == LEFT) {
             robot.grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
             robot.grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
         }
@@ -488,11 +508,10 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         double lastTime = getRuntime();
         double lastAngle = robot.getTiltGyroAngle();
         sleep(300);
-        double startTime = getRuntime();
-        while (opModeIsActive() && (isMoving && robot.getTiltGyroAngle() > -80 && getRuntime() < startTime + 3)) {
+        while (opModeIsActive() && isMoving) {
             double currentTime = getRuntime();
             double currentAngle = robot.getTiltGyroAngle();
-            if (Math.abs(currentTime - lastTime) > .15) {
+            if (Math.abs(currentTime - lastTime) > .25) {
                 if (Math.abs(currentAngle - lastAngle) / Math.abs(currentTime - lastTime) < degreesPerSecond) {
                     isMoving = false;
                 }
@@ -503,142 +522,70 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             telemetry.update();
             idle();
         }
-
-
-        if (robot.getTiltGyroAngle() < -70) {
+        if (robot.getTiltGyroAngle() < 300) {
             return true;
         } else {
-            double failedAngle = robot.getTiltGyroAngle();
-            int direction = -1;
-            int position = robot.leftFrontMotor.getCurrentPosition();
-            if (robot.getPotentiometerAngle() > 8)
-                direction = 1;
-            while (robot.getTiltGyroAngle() > failedAngle - 15 && Math.abs(robot.leftFrontMotor.getCurrentPosition() - position) < 150 && opModeIsActive()) {
-                if ((robot.getTiltGyroAngle() > failedAngle - 7))
-                    robot.drive(0, .1 * direction, 0);
-                else
-                    robot.drive(0, .05 * direction, 0);
-                idle();
-            }
-            robot.drive(0, 0, 0);
-            if (robot.getTiltGyroAngle() <= failedAngle - 15) {
-                startTime = getRuntime();
-                while (robot.getTiltGyroAngle() > -80 && Math.abs(startTime - getRuntime()) < 2 && opModeIsActive()) {
-                    idle();
-                }
-                return true;
-            } else
-                return false;
+            return false;
         }
     }
 
     boolean secondGlyph = false;
 
     void collectGlyphs() {
-
         secondGlyph = true;
-        robot.setGrabbersClosed(false);
-        robot.setSpearServoUp(false);
-        if (!otherBalancingBoard()) {
-            robot.setCollectorPower(1);
-            driveForRearWheel(1200, 1, 0, 3, alignmentAngle);
-            while ((robot.getAngle() < alignmentAngle + 45 || robot.getAngle() > alignmentAngle + 55) && opModeIsActive()) {
-                robot.drive(0, 0, robot.turn(alignmentAngle + 50));
-                idle();
-            }
-            driveForRearWheel(500, 1, 0, 3, alignmentAngle + 50);
-            driveForRearWheel(-800, 1, 0, 3, alignmentAngle);
-            startingValue = robot.rightFrontMotor.getCurrentPosition();
-            startingValue2 = robot.rightRearMotor.getCurrentPosition();
-            startingValue3 = robot.leftFrontMotor.getCurrentPosition();
-            startingValue4 = robot.leftRearMotor.getCurrentPosition();
-            startTime = getRuntime();
-            int targetS = 900;
-            if (cryptoboxKey == CENTER)
-                targetS = -400;
-            if (cryptoboxKey == LEFT)
-                targetS = -800;
-            while (Math.abs(getAverageEncoderValue()) < Math.abs(targetS) && opModeIsActive() && getRuntime() < startTime + 4) {
-                double rotationValue = 0;
-                rotationValue = robot.turn(alignmentAngle);
-                int direction;
-                if (targetS > 0) {
-                    direction = 1;
-                } else {
-                    direction = -1;
-                }
-                robot.drive(0, direction * 1, rotationValue);
-                telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
-                telemetry.update();
-                idle();
-            }
-            robot.drive(0, 0, 0);
-            robot.setCollectorPower(0);
-        } else {
-            if (getDesiredColor() == RED) {
-                alignmentAngle = -180;
-                if (cryptoboxKey == CENTER)
-                    driveForRearWheel(500, 0, 1, 3, alignmentAngle);
-                else if (cryptoboxKey == RIGHT)
-                    driveForRearWheel(900, 0, 1, 3, alignmentAngle);
-                else if (cryptoboxKey == LEFT)
-                    driveForRearWheel(100, 0, 1, 3, alignmentAngle);
-                robot.setCollectorPower(1);
-                driveForRearWheel(1200, 1, 0, 3, alignmentAngle);
-                while ((robot.getAngle() < alignmentAngle + 45 || robot.getAngle() > alignmentAngle + 55) && opModeIsActive()) {
-                    robot.drive(0, 0, robot.turn(alignmentAngle + 50));
-                    idle();
-                }
-                driveForRearWheel(900, 1, 0, 3, alignmentAngle + 45);
-                driveForRearWheel(-800, 1, 3, alignmentAngle);
-                robot.drive(0, 0, 0);
-            } else {
-                alignmentAngle = 0;
-                if (cryptoboxKey == CENTER)
-                    driveForRearWheel(600, 0, -1, 3, alignmentAngle);
-                else if (cryptoboxKey == RIGHT)
-                    driveForRearWheel(200, 0, -1, 3, alignmentAngle);
-                else if (cryptoboxKey == LEFT)
-                    driveForRearWheel(1100, 0, -1, 3, alignmentAngle);
-                robot.setCollectorPower(1);
-                driveForRearWheel(600, 1, 0, 3, alignmentAngle);
-                while ((robot.getAngle() > alignmentAngle - 45 || robot.getAngle() < alignmentAngle - 55) && opModeIsActive()) {
-                    robot.drive(0, 0, robot.turn(alignmentAngle - 50));
-                    idle();
-                }
-                driveForRearWheel(450, .6, 1, 3, alignmentAngle - 50);
-                driveForRearWheel(800, .6, 0, 3, alignmentAngle - 50);
-                driveForRearWheel(500, 1, 0, 3, alignmentAngle - 50);
-                robot.setAlignmentServoUp(false);
-                driveForRearWheel(-800, 1, 3, alignmentAngle);
-                robot.drive(0, 0, 0);
-                while (robot.getRange() > 30 && opModeIsActive()) {
-                    robot.drive(-.5, 0, robot.turn(alignmentAngle));
-                    if (robot.getRange() > 40 && opModeIsActive())
-                        robot.drive(-1, 0, robot.turn(alignmentAngle));
-                    telemetry.addData("Ultrasonic Distance", robot.getRange());
-                    telemetry.update();
-                    idle();
-                }
-                robot.drive(0, 0 ,0);
-                robot.setAlignmentServoUp(true);
-                sleep(500);
-                driveFor(600, .2, 1, 3, alignmentAngle);
-                robot.setAlignmentServoUp(false);
-                sleep(1000);
-            }
+        driveForRearWheel(1750, .4, 3, alignmentAngle - 30);
+        robot.setCollectorPower(1);
+        double turnStartTime = getRuntime();
+        while ((robot.getAngle() < alignmentAngle + 70 || robot.getAngle() > alignmentAngle + 80) && opModeIsActive() && getRuntime() < turnStartTime + 1.5) {
+            robot.drive(.25, 0, robot.turn(alignmentAngle + 75) / 1.2);
+            telemetry.addData("Angle", robot.getAngle());
+            telemetry.update();
+            idle();
         }
-        driveUpToCryptobox();
+        /**
+         robot.setCollectorPower(-1);
+         sleep(500);
+         robot.setCollectorPower(1);
+         driveForRearWheel(250, .3, 3, alignmentAngle + 90);
+         */
+        turnStartTime = getRuntime();
+        while ((robot.getAngle() < alignmentAngle - 5 || robot.getAngle() > alignmentAngle + 5) && opModeIsActive() && getRuntime() < turnStartTime + 1.5) {
+            robot.drive(-.5, 0, robot.turn(alignmentAngle) * 2);
+            telemetry.addData("Angle", robot.getAngle());
+            telemetry.update();
+            idle();
+        }
+
+
+        driveForRearWheel(-900, 1, 3, alignmentAngle - 10);
         robot.setCollectorPower(0);
-        robot.setSpearServoUp(true);
+        startingValue = robot.rightFrontMotor.getCurrentPosition();
+        startingValue2 = robot.rightRearMotor.getCurrentPosition();
+        startingValue3 = robot.leftFrontMotor.getCurrentPosition();
+        startingValue4 = robot.leftRearMotor.getCurrentPosition();
+        startTime = getRuntime();
+        int targetS = 1450;
+        while (Math.abs(getAverageEncoderValue()) < Math.abs(targetS) && opModeIsActive() && getRuntime() < startTime + 4) {
+            double rotationValue = 0;
+            rotationValue = robot.turn(alignmentAngle);
+            int direction;
+            if (targetS > 0) {
+                direction = 1;
+            } else {
+                direction = -1;
+            }
+            robot.drive(0, direction * 1, rotationValue);
+            telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
+            telemetry.update();
+            idle();
+        }
+        robot.drive(0, 0, 0);
+        driveUpToCryptobox();
         placeInCryptobox();
     }
 
-    void driveFor(int encoderTicks, double speed, double time, Double angle) {
-        driveFor(encoderTicks, speed, 0, time, angle);
-    }
 
-    void driveFor(int encoderTicks, double speed, double sideSpeed, double time, Double angle) {
+    void driveFor(int encoderTicks, double speed, double time, Double angle) {
         startingValue = robot.rightFrontMotor.getCurrentPosition();
         startTime = getRuntime();
         double direction;
@@ -654,7 +601,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             if (angle != null) {
                 rotationValue = robot.turn(angle);
             }
-            robot.drive(direction * Math.abs(speed), sideSpeed, rotationValue * 2);
+            robot.drive(direction * Math.abs(speed), 0, rotationValue * 2);
             telemetry.addData("Encoder Value", robot.rightFrontMotor.getCurrentPosition() - startingValue);
             telemetry.update();
             idle();
@@ -663,14 +610,10 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
     }
 
     void driveForRearWheel(int encoderTicks, double speed, double time, Double angle) {
-        driveForRearWheel(encoderTicks, speed, 0, time, angle, 0);
+        driveForRearWheel(encoderTicks, speed, time, angle, 0);
     }
 
-    void driveForRearWheel(int encoderTicks, double speed, double sideSpeed, double time, Double angle) {
-        driveForRearWheel(encoderTicks, speed, sideSpeed, time, angle, 0);
-    }
-
-    void driveForRearWheel(int encoderTicks, double speed, double sideSpeed, double time, Double angle, double rotationMultiplier) {
+    void driveForRearWheel(int encoderTicks, double speed, double time, Double angle, double rotationMultiplier) {
         startingValue = robot.rightRearMotor.getCurrentPosition();
         startTime = getRuntime();
         double direction;
@@ -686,7 +629,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
             if (angle != null) {
                 rotationValue = robot.turn(angle);
             }
-            robot.drive(direction * Math.abs(speed), sideSpeed, rotationValue * 2);
+            robot.drive(direction * Math.abs(speed), 0, rotationValue * 2);
             telemetry.addData("Encoder Value", robot.rightRearMotor.getCurrentPosition() - startingValue);
             telemetry.update();
             idle();

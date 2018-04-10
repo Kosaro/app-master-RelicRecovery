@@ -13,16 +13,15 @@ public class TiltGyroCalibrate extends OpMode{
     @Override
     public void init() {
         robot = new Hardware(hardwareMap);
-        robot.tiltGyro.calibrate();
     }
 
     @Override
     public void init_loop() {
-        telemetry.addData("Is Calibrating", robot.tiltGyro.isCalibrating());
+        telemetry.addData("Is Calibrating", 0);
     }
 
     @Override
     public void loop() {
-        telemetry.addData("Angle", robot.tiltGyro.getHeading());
+        telemetry.addData("Angle", robot.tiltGyro.getAngularOrientation().firstAngle);
     }
 }

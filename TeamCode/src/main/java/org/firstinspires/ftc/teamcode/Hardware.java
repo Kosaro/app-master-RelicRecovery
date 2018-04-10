@@ -55,6 +55,7 @@ public class Hardware {
     private static final String RELIC_TILT_SERVO = "rts";
     private static final String RELIC_ARM_TILT_SERVO = "rats";
     private static final String ALIGNMENT_SERVO = "as";
+    private static final String SPEAR_SERVO = "ss";
     private static final String RELIC_ARM_EXTEND_MOTOR = "raem";
     private static final String POTENTIOMETER = "p";
 
@@ -80,14 +81,14 @@ public class Hardware {
 
 
     public static final double GRAB_BOTTOM_SERVO_GRAB = .550; //new
-    public static final double GRAB_BOTTOM_SERVO_RELEASE = .369; //new
+    public static final double GRAB_BOTTOM_SERVO_RELEASE = .411; //new
     public static final double GRAB_TOP_SERVO_GRAB = .4; //new
-    public static final double GRAB_TOP_SERVO_RELEASE = .51; //new
+    public static final double GRAB_TOP_SERVO_RELEASE = .0477; //new
     public static final double FLIP_SERVO_UP_WHEN_DOWN = .039;
     public static final double FLIP_SERVO_UP_WHEN_UP = .067;
     public static final double FLIP_SERVO_DOWN = 1;
-    public static final double RELIC_GRAB_SERVO_RELEASE = .33;
-    public static final double RELIC_GRAB_SERVO_GRAB = .52;
+    public static final double RELIC_GRAB_SERVO_RELEASE = .237;
+    public static final double RELIC_GRAB_SERVO_GRAB = .445;
     public static final double RELIC_GRAB_SERVO_FULL_CLOSE = .602;
     public static final double RELIC_TILT_SERVO_UPPER_LIMIT = .97;
     public static final double RELIC_TILT_SERVO_LOWER_LIMIT = .1;
@@ -101,6 +102,8 @@ public class Hardware {
     double relicArmTiltSpeed = .093; //change in position per second
     public static final double RELIC_ARM_TILT_SERVO_0_DEGREE_VALUE = 0.661111111;
     public static final double RELIC_ARM_TILT_SERVO_90_DEGREE_VALUE = 0.872222222;
+    public static final double SPEAR_VALUE_UP = 0;
+    public static final double SPEAR_VALUE_DOWN = 1;
     /*public static final double RELIC_ARM_EXTEND_SERVO_LOWER_LIMIT = .271;
     public static final double RELIC_ARM_EXTEND_SERVO_UPPER_LIMIT = .706; */
     double relicArmExtendSpeed = .07272727; //change in position per second
@@ -137,13 +140,14 @@ public class Hardware {
     Servo relicTiltServo;
     Servo relicArmTiltServo;
     Servo alignmentServo;
+    Servo spearServo;
     //Servo relicArmExtendServo;
     BNO055IMU imu;
     OpticalDistanceSensor lightSensor;
     DigitalChannel touchSensorTop;
     DigitalChannel touchSensorBottom;
     LynxI2cColorRangeSensor colorSensor;
-    ModernRoboticsI2cGyro tiltGyro;
+    BNO055IMU tiltGyro;
     ModernRoboticsI2cRangeSensor rangeSensor;
     DistanceSensor distanceSensor;
     AnalogInput potentiometer;
@@ -270,10 +274,11 @@ public class Hardware {
         relicTiltServo = getHardwareDevice(Servo.class, RELIC_TILT_SERVO);
         relicArmTiltServo = getHardwareDevice(Servo.class, RELIC_ARM_TILT_SERVO);
         alignmentServo = getHardwareDevice(Servo.class, ALIGNMENT_SERVO);
+        spearServo = getHardwareDevice(Servo.class, SPEAR_SERVO);
         touchSensorBottom = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_BOTTOM);
         touchSensorTop = getHardwareDevice(DigitalChannel.class, TOUCH_SENSOR_TOP);
         colorSensor = getHardwareDevice(LynxI2cColorRangeSensor.class, COLOR_SENSOR);
-        tiltGyro = getHardwareDevice(ModernRoboticsI2cGyro.class, TILT_GYRO);
+        tiltGyro = getHardwareDevice(BNO055IMU.class, TILT_GYRO);
         rangeSensor = getHardwareDevice(ModernRoboticsI2cRangeSensor.class, RANGE_SENSOR);
         distanceSensor = getHardwareDevice(DistanceSensor.class, DISTANCE_SENSOR);
         potentiometer = getHardwareDevice(AnalogInput.class, POTENTIOMETER);
@@ -288,6 +293,17 @@ public class Hardware {
             parameters.loggingTag = "IMU";
             parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
             imu.initialize(parameters);
+            //imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        }
+        if (tiltGyro != null) {
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            parameters.loggingEnabled = true;
+            parameters.loggingTag = "tiltGyro";
+            parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+            tiltGyro.initialize(parameters);
             //imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
         }
 
@@ -340,6 +356,15 @@ public class Hardware {
             jewelServo.setPosition(JEWEL_SERVO_UP);
         if (alignmentServo != null) {
             alignmentServo.setPosition(ALIGNMENT_SERVO_UP);
+        }
+    }
+
+    void setSpearServoUp(boolean up){
+        if (spearServo != null){
+            if (up)
+                spearServo.setPosition(SPEAR_VALUE_UP);
+            else
+                spearServo.setPosition(SPEAR_VALUE_DOWN);
         }
     }
 
@@ -784,18 +809,22 @@ public class Hardware {
     private double tiltGyroOffset = 0;
 
     void setTiltGyroOffset() {
-        tiltGyroOffset = tiltGyro.getHeading();
+        tiltGyroOffset = tiltGyro.getAngularOrientation().firstAngle;
     }
 
     double getTiltGyroAngle() {
         double result;
         if (tiltGyro != null)
-            result = tiltGyro.getHeading() - tiltGyroOffset;
+            result = tiltGyro.getAngularOrientation().firstAngle - tiltGyroOffset;
         else
             result = 0;
 
-        result += 360;
-        result %= 360;
+        if (result > 180){
+            result -= 360;
+        }
+        if (result < -180){
+            result += 180;
+        }
         return result;
     }
 

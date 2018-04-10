@@ -558,11 +558,7 @@ public abstract class RelicRecoveryAutonomousOld extends LinearOpMode {
     }
 
     void calibrateGyroAndInitializeVuforia() {
-        robot.tiltGyro.calibrate();
         robot.initializeVuforia();
-        while (opModeIsActive() && robot.tiltGyro.isCalibrating()) {
-            idle();
-        }
     }
 
     double getTimeLeft() {

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.RelicRecoveryAutonomous;
@@ -7,7 +8,7 @@ import org.firstinspires.ftc.teamcode.RelicRecoveryAutonomous;
 /**
  * Created by okosa on 12/9/2017.
  */
-//@Disabled
+@Disabled
 @Autonomous(name = "Ranking Points Blue Other Balancing Board", group = "Blue")
 public class RankingPointsBlueAutoOtherBalancingBoard extends RelicRecoveryAutonomous {
     @Override

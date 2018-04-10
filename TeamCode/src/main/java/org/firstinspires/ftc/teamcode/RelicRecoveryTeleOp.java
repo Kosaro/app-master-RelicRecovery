@@ -24,6 +24,7 @@ public class RelicRecoveryTeleOp extends OpMode {
         robot = new Hardware(hardwareMap);
         robot.setDriveTrainRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.relicGrabServo.setPosition(RELIC_GRAB_SERVO_FULL_CLOSE);
+        robot.setSpearServoUp(true);
     }
 
     @Override

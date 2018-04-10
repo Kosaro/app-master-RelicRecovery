@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 /**
  * Created by okosa on 11/10/2017.
  */
-//@Disabled
+@Disabled
 @TeleOp(name = "Tilt Gyro Test")
 public class TiltGyroTest extends OpMode{
     Hardware robot;
@@ -27,6 +27,6 @@ public class TiltGyroTest extends OpMode{
 
     @Override
     public void loop() {
-        telemetry.addData("Angle", robot.tiltGyro.getHeading());
+
     }
 }
