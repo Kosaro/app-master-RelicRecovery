@@ -86,6 +86,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
         while (!(isStarted() || isStopRequested())) {
             telemetry.addData("Status", "Waiting For Start");
             telemetry.addData("CryptoKey", robot.getPictograph());
+            telemetry.addData("Tilt Gyro", robot.getTiltGyroAngle());
             telemetry.update();
             idle();
         }
@@ -260,19 +261,29 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                 alignmentAngle = 179.99;
             }
         }
-        while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
-            robot.drive(0, 0, robot.turn(alignmentAngle));
-            telemetry.addData("Angle", robot.getAngle());
-            telemetry.update();
-            idle();
-        }
-        robot.setAlignmentServoUp(false);
-        sleep(100);
-        while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
-            robot.drive(0, 0, robot.turn(alignmentAngle));
-            telemetry.addData("Angle", robot.getAngle());
-            telemetry.update();
-            idle();
+        if (otherBalancingBoard() && getDesiredColor() == RED){
+            robot.setAlignmentServoUp(false);
+            while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
+                robot.drive(0, 0, robot.turn(alignmentAngle));
+                telemetry.addData("Angle", robot.getAngle());
+                telemetry.update();
+                idle();
+            }
+        }else {
+            while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
+                robot.drive(0, 0, robot.turn(alignmentAngle));
+                telemetry.addData("Angle", robot.getAngle());
+                telemetry.update();
+                idle();
+            }
+            robot.setAlignmentServoUp(false);
+            sleep(100);
+            while ((robot.getAngle() < alignmentAngle - 3 || robot.getAngle() > alignmentAngle + 3) && opModeIsActive()) {
+                robot.drive(0, 0, robot.turn(alignmentAngle));
+                telemetry.addData("Angle", robot.getAngle());
+                telemetry.update();
+                idle();
+            }
         }
         robot.drive(0, 0, 0);
     }
@@ -479,7 +490,7 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
 
     boolean attemptToLowerGlyph() {
         robot.setTiltServoPositionUp(true);
-        if (secondGlyph && ((cryptoboxKey == LEFT && getDesiredColor() == RED) || (cryptoboxKey != CENTER && getDesiredColor() == BLUE))) {
+        if (secondGlyph && ((cryptoboxKey == LEFT && getDesiredColor() == RED) || (getDesiredColor() == BLUE))) {
             robot.grabBottomServo.setPosition(GRAB_BOTTOM_SERVO_RELEASE);
             robot.grabTopServo.setPosition(GRAB_TOP_SERVO_GRAB);
         }
@@ -585,10 +596,6 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                     driveForRearWheel(100, 0, 1, 3, alignmentAngle);
                 robot.setCollectorPower(1);
                 driveForRearWheel(1200, 1, 0, 3, alignmentAngle);
-                while ((robot.getAngle() < alignmentAngle + 45 || robot.getAngle() > alignmentAngle + 55) && opModeIsActive()) {
-                    robot.drive(0, 0, robot.turn(alignmentAngle + 50));
-                    idle();
-                }
                 driveForRearWheel(900, 1, 0, 3, alignmentAngle + 45);
                 driveForRearWheel(-800, 1, 3, alignmentAngle);
                 robot.drive(0, 0, 0);
@@ -606,9 +613,13 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                     robot.drive(0, 0, robot.turn(alignmentAngle - 50));
                     idle();
                 }
-                driveForRearWheel(450, .6, 1, 3, alignmentAngle - 50);
-                driveForRearWheel(800, .6, 0, 3, alignmentAngle - 50);
-                driveForRearWheel(500, 1, 0, 3, alignmentAngle - 50);
+                driveForRearWheel(450, .5, 1, 3, alignmentAngle - 50);
+                driveForRearWheel(600, .6, 0, 3, alignmentAngle - 50);
+                while ((robot.getAngle() > alignmentAngle + 05 || robot.getAngle() < alignmentAngle - 05) && opModeIsActive()) {
+                    robot.drive(0, 0, robot.turn(alignmentAngle - 0)* 3);
+                    idle();
+                }
+                driveForRearWheel(600, 1, 0, 3, alignmentAngle - 0);
                 robot.setAlignmentServoUp(false);
                 driveForRearWheel(-800, 1, 3, alignmentAngle);
                 robot.drive(0, 0, 0);
@@ -623,7 +634,11 @@ public abstract class RelicRecoveryAutonomous extends LinearOpMode {
                 robot.drive(0, 0 ,0);
                 robot.setAlignmentServoUp(true);
                 sleep(500);
-                driveFor(600, .2, 1, 3, alignmentAngle);
+                if (cryptoboxKey == LEFT)
+                driveFor(1000, .2, 1, 3, alignmentAngle);
+                else
+                    driveFor(1900, .2, 1, 3, alignmentAngle);
+
                 robot.setAlignmentServoUp(false);
                 sleep(1000);
             }

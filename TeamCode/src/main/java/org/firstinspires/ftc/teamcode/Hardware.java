@@ -83,8 +83,8 @@ public class Hardware {
     public static final double GRAB_BOTTOM_SERVO_GRAB = .550; //new
     public static final double GRAB_BOTTOM_SERVO_RELEASE = .411; //new
     public static final double GRAB_TOP_SERVO_GRAB = .4; //new
-    public static final double GRAB_TOP_SERVO_RELEASE = .0477; //new
-    public static final double FLIP_SERVO_UP_WHEN_DOWN = .039;
+    public static final double GRAB_TOP_SERVO_RELEASE = .477; //new
+    public static final double FLIP_SERVO_UP_WHEN_DOWN = .054;
     public static final double FLIP_SERVO_UP_WHEN_UP = .067;
     public static final double FLIP_SERVO_DOWN = 1;
     public static final double RELIC_GRAB_SERVO_RELEASE = .237;
